@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   CircleCheck,
   CircleX,
+  ChevronDown,
   Clock3,
   Compass,
   Dna,
@@ -27,7 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { questions } from "@/data/questions";
-import { answerOptions, axisInfo, calculateScores, getArchetype, getAxisPercent, getPoliticalPosition, type Answer } from "@/utils/politics";
+import { answerOptions, axisInfo, calculateScores, getArchetype, getArchetypeSimilarities, getAxisPercent, getPoliticalPosition, type Answer } from "@/utils/politics";
 import type { Axis } from "@/data/questions";
 
 type Stage = "home" | "quiz" | "result";
@@ -61,22 +62,22 @@ const archetypeIcons: Record<string, LucideIcon> = {
 };
 
 const homeProfiles = [
-  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados." },
-  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades." },
-  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal." },
-  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo." },
-  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais." },
-  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado." },
-  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos." },
-  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional." },
-  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular." },
-  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições." },
-  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional." },
-  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades." },
-  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional." },
-  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais." },
-  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas." },
-  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central." },
+  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "John Maynard Keynes"] },
+  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades.", examples: ["Olof Palme", "Willy Brandt"] },
+  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal.", examples: ["Friedrich Hayek", "Milton Friedman"] },
+  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo.", examples: ["Jane Addams", "Martin Luther King Jr."] },
+  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais.", examples: ["Edmund Burke", "Michael Oakeshott"] },
+  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado.", examples: ["John Stuart Mill", "Benjamin Constant"] },
+  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos.", examples: ["James Q. Wilson", "William Bratton"] },
+  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional.", examples: ["Celso Furtado", "Juscelino Kubitschek"] },
+  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular.", examples: ["Thomas Jefferson", "Simón Bolívar"] },
+  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições.", examples: ["James Madison", "Ulysses Guimarães"] },
+  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional.", examples: ["Wangari Maathai", "Gro Harlem Brundtland"] },
+  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades.", examples: ["Elinor Ostrom", "Jane Addams"] },
+  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional.", examples: ["Mario Draghi", "Jean Monnet"] },
+  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais.", examples: ["Konrad Adenauer", "Jacques Maritain"] },
+  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas.", examples: ["Nelson Mandela", "Václav Havel"] },
+  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central.", examples: ["Benjamin Tucker", "Lysander Spooner"] },
 ];
 
 type ShareAxis = { label: string; percent: number };
@@ -246,6 +247,9 @@ export default function Home() {
 
   const scores = calculateScores(quizQuestions, answers);
   const archetype = getArchetype(scores, quizQuestions);
+  const closestProfiles = getArchetypeSimilarities(scores, quizQuestions)
+    .filter((match) => match.archetype.name !== archetype.name)
+    .slice(0, 3);
   const politicalPosition = getPoliticalPosition(scores, quizQuestions);
   const progress = ((current + (answers[current] ? 1 : 0)) / quizQuestions.length) * 100;
   const currentQuestion = quizQuestions[current];
@@ -354,6 +358,8 @@ export default function Home() {
               </div>
               <h1 className="max-w-2xl text-5xl font-semibold leading-[1.08] tracking-[-0.04em] sm:text-6xl lg:text-7xl">Descubra seu <span className="bg-gradient-to-r from-violet-300 to-teal-200 bg-clip-text text-transparent">DNA Político</span></h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-white/55 sm:text-lg">Responda 30 questões sobre economia, costumes, segurança e outros temas para conhecer as ideias que mais se aproximam das suas.</p>
+              <button onClick={continueQuiz} className="mt-8 inline-flex items-center gap-3 rounded-xl bg-violet-400 px-6 py-4 text-sm font-semibold text-[#11101d] transition hover:bg-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:ring-offset-2 focus:ring-offset-[#090b12]">{current > 0 || answers.some(Boolean) ? "Continuar questionário" : "Iniciar questionário"} <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></button>
+              <p className="mt-4 text-xs text-white/45">Não há respostas certas. Escolha a opção que melhor representa sua opinião.</p>
             </div>
             <div className="relative mx-auto flex aspect-square w-full max-w-[340px] items-center justify-center">
               <div className="absolute inset-5 rounded-full border border-white/[0.08]" />
@@ -394,9 +400,41 @@ export default function Home() {
               </div>
               <p className="mt-6 rounded-xl border border-violet-300/15 bg-violet-300/[0.05] px-5 py-4 text-center text-sm leading-6 text-white/65">Não existem respostas certas ou erradas. Os perfis representam combinações diferentes de valores e prioridades.</p>
             </section>
-            <div className="mb-12 flex flex-col items-center text-center">
-              <button onClick={continueQuiz} className="inline-flex items-center gap-3 rounded-xl bg-violet-400 px-6 py-4 text-sm font-semibold text-[#11101d] transition hover:bg-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:ring-offset-2 focus:ring-offset-[#090b12]">{current > 0 || answers.some(Boolean) ? "Continuar questionário" : "Iniciar questionário"} <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></button>
-              <p className="mt-4 text-xs text-white/45">Não há respostas certas. Escolha a opção que melhor representa sua opinião.</p>
+            <section className="mb-10" aria-labelledby="historical-profiles-title">
+              <header className="mx-auto mb-8 max-w-3xl text-center">
+                <h2 id="historical-profiles-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Perfis e exemplos históricos</h2>
+                <p className="mt-3 text-sm leading-6 text-white/55 sm:text-base">Conheça algumas figuras cujas ideias ou atuações lembram aspectos de cada perfil.</p>
+              </header>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {homeProfiles.map((profile) => {
+                  const ProfileIcon = archetypeIcons[profile.name];
+                  return (
+                    <details key={profile.name} className="historical-profile theme-panel rounded-xl border border-white/[0.08] bg-white/[0.025] p-5">
+                      <summary className="flex cursor-pointer list-none items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300">
+                        <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-violet-300/20 bg-violet-300/[0.08] text-violet-300">
+                          <ProfileIcon className="h-5 w-5" strokeWidth={1.8} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-semibold leading-5">{profile.name}</span>
+                          <span className="mt-2 block text-sm leading-5 text-white/55">{profile.description}</span>
+                          <span className="mt-3 block text-xs font-medium text-violet-300">Ver exemplos</span>
+                        </span>
+                        <ChevronDown aria-hidden="true" className="historical-chevron mt-1 h-4 w-4 shrink-0 text-white/45 transition-transform" />
+                      </summary>
+                      <div className="mt-4 border-t border-white/[0.08] pt-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-white/45">Exemplos associados</p>
+                        <ul className="mt-2 space-y-1.5 text-sm leading-5 text-white/75">
+                          {profile.examples.map((example) => <li key={example}>{example}</li>)}
+                        </ul>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+              <p className="mt-6 rounded-xl border border-violet-300/15 bg-violet-300/[0.05] px-5 py-4 text-center text-sm leading-6 text-white/65">Os exemplos abaixo são apenas aproximações ilustrativas. Pessoas reais raramente correspondem perfeitamente a um único perfil.</p>
+            </section>
+            <div className="mb-12 flex justify-center">
+              <button onClick={continueQuiz} className="inline-flex items-center gap-3 rounded-xl border border-violet-300/30 bg-violet-300/[0.08] px-5 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-300/[0.14] focus:outline-none focus:ring-2 focus:ring-violet-300">Começar questionário <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></button>
             </div>
           </>
         )}
@@ -437,6 +475,25 @@ export default function Home() {
                   <p className="mt-1 text-xl font-semibold text-white">{politicalPosition}</p>
                   <p className="mt-1 text-xs leading-5 text-white/50">Baseado principalmente nos eixos de Economia e Costumes.</p>
                 </div>
+                <section className="mt-7" aria-labelledby="closest-profiles-title">
+                  <h2 id="closest-profiles-title" className="text-sm font-semibold">Perfis mais próximos</h2>
+                  <p className="mt-1 text-xs leading-5 text-white/45">Outros perfis que também se aproximam das suas respostas.</p>
+                  <ul className="mt-3 space-y-2">
+                    {closestProfiles.map(({ archetype: profile, compatibility }) => {
+                      const NearbyIcon = archetypeIcons[profile.name] ?? Dna;
+                      return (
+                        <li key={profile.name} className="theme-panel flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <NearbyIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-violet-300" strokeWidth={1.8} />
+                            <span className="truncate text-sm font-medium">{profile.name}</span>
+                          </span>
+                          <span className="shrink-0 text-xs tabular-nums text-teal-200">{compatibility}% compatibilidade</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-2 text-[11px] leading-4 text-white/40">Percentuais indicam proximidade entre respostas e perfis, não uma avaliação política.</p>
+                </section>
               </div>
               <div className="mt-8 border-t border-white/[0.08] pt-5">
                 <p className="text-xs leading-5 text-white/40">Um retrato simplificado das suas respostas — não um rótulo definitivo.</p>
@@ -454,6 +511,18 @@ export default function Home() {
                 </div>;
               })}</div>
             </div>
+          </section>
+        )}
+
+        {stage === "result" && (
+          <section className="theme-panel mb-6 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-6 sm:p-8" aria-labelledby="calculation-title">
+            <h2 id="calculation-title" className="text-lg font-semibold">Como calculamos seu resultado?</h2>
+            <p className="mt-2 text-sm leading-6 text-white/60">Suas respostas são analisadas em seis dimensões:</p>
+            <ul className="mt-3 grid gap-2 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
+              {axisInfo.map((axis) => <li key={axis.key} className="flex items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-violet-300" />{axis.label}</li>)}
+            </ul>
+            <p className="mt-4 text-sm leading-6 text-white/60">Cada resposta ajuda a mostrar sua posição em um ou mais desses eixos. Depois, comparamos seu perfil com diferentes perfis políticos e mostramos os que mais se aproximam das suas respostas.</p>
+            <p className="mt-3 text-xs leading-5 text-white/45">Este resultado é uma aproximação baseada nas respostas que você deu e não representa toda a complexidade das suas opiniões políticas.</p>
           </section>
         )}
 

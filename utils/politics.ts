@@ -108,3 +108,28 @@ export function getArchetype(scores: Scores, questions: Question[]) {
     return distance(candidate) < distance(closest) ? candidate : closest;
   }, archetypes[0]);
 }
+
+export function getArchetypeSimilarities(scores: Scores, questions: Question[]) {
+  const axes = Object.keys(scores) as Axis[];
+  const normalized = Object.fromEntries(
+    axes.map((axis) => {
+      const max = questions.reduce((sum, question) => sum + Math.abs(question.effects[axis] ?? 0) * 3, 0);
+      return [axis, max ? scores[axis] / max : 0];
+    }),
+  ) as Scores;
+  const maxDistance = Math.sqrt(axes.length * 4);
+
+  return archetypes
+    .map((archetype) => {
+      const distance = Math.sqrt(
+        axes.reduce((sum, axis) => sum + (normalized[axis] - archetype.target[axis]) ** 2, 0),
+      );
+
+      return {
+        archetype,
+        distance,
+        compatibility: Math.round((1 - distance / maxDistance) * 100),
+      };
+    })
+    .sort((left, right) => left.distance - right.distance);
+}

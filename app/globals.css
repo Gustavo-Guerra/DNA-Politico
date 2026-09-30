@@ -130,6 +130,9 @@ button { cursor: pointer; }
 
 .answer-agree-icon { color: #34d399; }
 .answer-disagree-icon { color: #fb7185; }
+.historical-profile > summary::-webkit-details-marker { display: none; }
+.historical-profile > summary::marker { content: ""; }
+.historical-profile[open] .historical-chevron { transform: rotate(180deg); }
 
 :root[data-theme="light"] .answer-agree-icon { color: #047857; }
 :root[data-theme="light"] .answer-disagree-icon { color: #be123c; }
