@@ -275,6 +275,10 @@ export default function Home() {
     setTheme(initialTheme);
   }, []);
 
+  useEffect(() => {
+    if (stage === "result") window.scrollTo(0, 0);
+  }, [stage]);
+
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
