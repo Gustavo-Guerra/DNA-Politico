@@ -4,6 +4,16 @@
   color-scheme: dark;
   --background: #090b12;
   --foreground: #f4f5f7;
+  --color-white: #fff;
+  --color-black: #000;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f6fb;
+  --foreground: #182236;
+  --color-white: #182236;
+  --color-black: #fff;
 }
 
 * { box-sizing: border-box; }
@@ -19,5 +29,107 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(ellipse at 50% -18%, rgba(116, 98, 222, .12), transparent 48%),
+    radial-gradient(ellipse at 100% 90%, rgba(31, 129, 139, .08), transparent 35%),
+    var(--background);
+}
+
+:root[data-theme="light"] [class~="text-white"] {
+  color: var(--foreground) !important;
+}
+
+:root[data-theme="light"] [class~="text-white/90"],
+:root[data-theme="light"] [class~="text-white/85"],
+:root[data-theme="light"] [class~="text-white/75"],
+:root[data-theme="light"] [class~="text-white/65"] {
+  color: #2c3a52 !important;
+}
+
+:root[data-theme="light"] [class~="text-white/55"],
+:root[data-theme="light"] [class~="text-white/50"],
+:root[data-theme="light"] [class~="text-white/45"],
+:root[data-theme="light"] [class~="text-white/40"],
+:root[data-theme="light"] [class~="text-white/35"],
+:root[data-theme="light"] [class~="text-white/30"],
+:root[data-theme="light"] [class~="text-white/25"] {
+  color: #5a667b !important;
+}
+
+:root[data-theme="light"] [class~="text-violet-300"],
+:root[data-theme="light"] [class~="text-violet-200"] {
+  color: #5948b5 !important;
+}
+
+:root[data-theme="light"] [class~="text-violet-200/65"] {
+  color: #62558f !important;
+}
+
+:root[data-theme="light"] [class~="text-teal-200"] {
+  color: #087568 !important;
+}
+
+:root[data-theme="light"] [class~="text-teal-100/90"] {
+  color: #17685e !important;
+}
+
+:root[data-theme="light"] [class*="border-white/"] {
+  border-color: rgb(38 50 72 / 16%) !important;
+}
+
+:root[data-theme="light"] [class*="bg-white/"] {
+  background-color: rgb(24 34 54 / 4%) !important;
+}
+
+:root[data-theme="light"] [class*="bg-black/"] {
+  background-color: rgb(103 82 190 / 5%) !important;
+}
+
+:root[data-theme="light"] [class*="from-violet-300"][class*="to-teal-200"] {
+  background-image: linear-gradient(to right, #6553ca, #147f75) !important;
+}
+
+:root[data-theme="light"] [class~="theme-brand-mark"],
+:root[data-theme="light"] [class~="theme-center-mark"] {
+  background-color: #fff !important;
+  border-color: rgb(67 78 104 / 18%) !important;
+}
+
+:root[data-theme="light"] [class~="theme-archetype-card"] {
+  background-image: linear-gradient(135deg, #eeecff 0%, #fff 55%, #e5f7f2 100%) !important;
+  border-color: rgb(110 91 196 / 22%) !important;
+}
+
+:root[data-theme="light"] [class~="theme-panel"] {
+  background-color: rgb(255 255 255 / 82%) !important;
+}
+
+:root[data-theme="light"] [class~="theme-quote"] {
+  background-color: rgb(104 86 182 / 5%) !important;
+  border-color: rgb(38 50 72 / 12%) !important;
+}
+
+:root[data-theme="light"] [class~="theme-progress-track"] {
+  background-color: #dfe4ef !important;
+}
+
+:root[data-theme="light"] [class~="theme-mode-button"] {
+  color: #39465d !important;
+  background-color: rgb(255 255 255 / 82%) !important;
+  border-color: rgb(38 50 72 / 18%) !important;
+}
+
+:root[data-theme="light"] [class~="theme-mode-button"]:hover {
+  background-color: #fff !important;
+  border-color: rgb(101 83 202 / 45%) !important;
+}
+
 button { cursor: pointer; }
 ::selection { color: #fff; background: #6257d9; }
+
+.answer-agree-icon { color: #34d399; }
+.answer-disagree-icon { color: #fb7185; }
+
+:root[data-theme="light"] .answer-agree-icon { color: #047857; }
+:root[data-theme="light"] .answer-disagree-icon { color: #be123c; }
