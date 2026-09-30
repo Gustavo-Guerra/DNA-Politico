@@ -8,6 +8,8 @@ import {
   ChevronDown,
   Clock3,
   Compass,
+  Coffee,
+  Copy,
   Dna,
   Factory,
   Feather,
@@ -27,6 +29,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { questions } from "@/data/questions";
 import { answerOptions, axisInfo, calculateScores, getArchetype, getArchetypeSimilarities, getAxisPercent, getPoliticalPosition, type Answer } from "@/utils/politics";
 import type { Axis } from "@/data/questions";
@@ -62,23 +65,25 @@ const archetypeIcons: Record<string, LucideIcon> = {
 };
 
 const homeProfiles = [
-  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "John Maynard Keynes"] },
-  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades.", examples: ["Olof Palme", "Willy Brandt"] },
-  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal.", examples: ["Friedrich Hayek", "Milton Friedman"] },
-  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo.", examples: ["Jane Addams", "Martin Luther King Jr."] },
-  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais.", examples: ["Edmund Burke", "Michael Oakeshott"] },
-  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado.", examples: ["John Stuart Mill", "Benjamin Constant"] },
-  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos.", examples: ["James Q. Wilson", "William Bratton"] },
-  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional.", examples: ["Celso Furtado", "Juscelino Kubitschek"] },
-  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular.", examples: ["Thomas Jefferson", "Simón Bolívar"] },
-  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições.", examples: ["James Madison", "Ulysses Guimarães"] },
-  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional.", examples: ["Wangari Maathai", "Gro Harlem Brundtland"] },
-  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades.", examples: ["Elinor Ostrom", "Jane Addams"] },
-  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional.", examples: ["Mario Draghi", "Jean Monnet"] },
-  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais.", examples: ["Konrad Adenauer", "Jacques Maritain"] },
-  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas.", examples: ["Nelson Mandela", "Václav Havel"] },
-  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central.", examples: ["Benjamin Tucker", "Lysander Spooner"] },
+  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "Fernando Henrique Cardoso", "John Maynard Keynes", "Angela Merkel"] },
+  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades.", examples: ["Lula", "Olof Palme", "Willy Brandt", "Franklin D. Roosevelt"] },
+  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal.", examples: ["Roberto Campos", "Javier Milei", "Friedrich Hayek", "Milton Friedman", "Margaret Thatcher"] },
+  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo.", examples: ["Marina Silva", "Jane Addams", "Martin Luther King Jr.", "Wangari Maathai"] },
+  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais.", examples: ["Jair Bolsonaro", "Edmund Burke", "Michael Oakeshott", "Ronald Reagan"] },
+  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado.", examples: ["John Stuart Mill", "Benjamin Constant", "Maria Lacerda de Moura", "Benjamin Tucker"] },
+  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos.", examples: ["Jair Bolsonaro", "Nayib Bukele", "James Q. Wilson", "William Bratton"] },
+  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional.", examples: ["Leonel Brizola", "Ciro Gomes", "Celso Furtado", "Juscelino Kubitschek"] },
+  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular.", examples: ["Enéas Carneiro", "Donald Trump", "Simón Bolívar", "Thomas Jefferson"] },
+  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições.", examples: ["Fernando Henrique Cardoso", "José Serra", "James Madison", "Ulysses Guimarães"] },
+  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional.", examples: ["Marina Silva", "Wangari Maathai", "Gro Harlem Brundtland", "Al Gore"] },
+  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades.", examples: ["Eduardo Suplicy", "Elinor Ostrom", "Jane Addams", "John Dewey"] },
+  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional.", examples: ["José Serra", "Mario Draghi", "Jean Monnet", "Angela Merkel"] },
+  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais.", examples: ["Jair Bolsonaro", "Konrad Adenauer", "Jacques Maritain", "Ronald Reagan"] },
+  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas.", examples: ["Tancredo Neves", "Nelson Mandela", "Václav Havel", "Angela Merkel"] },
+  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central.", examples: ["Maria Lacerda de Moura", "Benjamin Tucker", "Lysander Spooner", "Murray Rothbard"] },
 ];
+
+const pixPayload = "00020126580014BR.GOV.BCB.PIX0136c39d45db-82be-4237-861e-ba554e50cdcd5204000053039865802BR5920Gustavo Guerra Sales6009SAO PAULO621405101suPsiyNgr63047223";
 
 type ShareAxis = { label: string; percent: number };
 
@@ -187,6 +192,7 @@ export default function Home() {
   const [quizQuestions, setQuizQuestions] = useState(questions);
   const [answers, setAnswers] = useState<(Answer | null)[]>(Array(questions.length).fill(null));
   const [shareMessage, setShareMessage] = useState("");
+  const [pixMessage, setPixMessage] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -247,7 +253,9 @@ export default function Home() {
 
   const scores = calculateScores(quizQuestions, answers);
   const archetype = getArchetype(scores, quizQuestions);
-  const closestProfiles = getArchetypeSimilarities(scores, quizQuestions)
+  const archetypeSimilarities = getArchetypeSimilarities(scores, quizQuestions);
+  const primaryCompatibility = archetypeSimilarities.find((match) => match.archetype.name === archetype.name)?.compatibility ?? 0;
+  const closestProfiles = archetypeSimilarities
     .filter((match) => match.archetype.name !== archetype.name)
     .slice(0, 3);
   const politicalPosition = getPoliticalPosition(scores, quizQuestions);
@@ -264,6 +272,15 @@ export default function Home() {
       setShareMessage("Resultado copiado!");
     } catch {
       setShareMessage("Não foi possível copiar automaticamente neste navegador.");
+    }
+  }
+
+  async function copyPix() {
+    try {
+      await navigator.clipboard.writeText(pixPayload);
+      setPixMessage("Obrigado por apoiar o DNA Político ❤️");
+    } catch {
+      setPixMessage("Não foi possível copiar automaticamente. Tente novamente neste navegador.");
     }
   }
 
@@ -403,7 +420,7 @@ export default function Home() {
             <section className="mb-10" aria-labelledby="historical-profiles-title">
               <header className="mx-auto mb-8 max-w-3xl text-center">
                 <h2 id="historical-profiles-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Perfis e exemplos históricos</h2>
-                <p className="mt-3 text-sm leading-6 text-white/55 sm:text-base">Conheça algumas figuras cujas ideias ou atuações lembram aspectos de cada perfil.</p>
+                <p className="mt-3 text-sm leading-6 text-white/55 sm:text-base">Figuras frequentemente associadas a ideias semelhantes, como exemplos aproximados — não classificações definitivas.</p>
               </header>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {homeProfiles.map((profile) => {
@@ -417,12 +434,12 @@ export default function Home() {
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-semibold leading-5">{profile.name}</span>
                           <span className="mt-2 block text-sm leading-5 text-white/55">{profile.description}</span>
-                          <span className="mt-3 block text-xs font-medium text-violet-300">Ver exemplos</span>
+                          <span className="mt-3 block text-xs font-medium text-violet-300">Ver exemplos aproximados</span>
                         </span>
                         <ChevronDown aria-hidden="true" className="historical-chevron mt-1 h-4 w-4 shrink-0 text-white/45 transition-transform" />
                       </summary>
                       <div className="mt-4 border-t border-white/[0.08] pt-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-white/45">Exemplos associados</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-white/45">Figuras frequentemente associadas</p>
                         <ul className="mt-2 space-y-1.5 text-sm leading-5 text-white/75">
                           {profile.examples.map((example) => <li key={example}>{example}</li>)}
                         </ul>
@@ -448,7 +465,7 @@ export default function Home() {
               <h1 className="mb-9 text-2xl font-medium leading-relaxed tracking-[-0.02em] sm:text-3xl">{currentQuestion.text}</h1>
               <div className="grid grid-cols-1 gap-3">
                 {answerOptions.map((option, index) => (
-                  <button key={`${currentQuestion.id}-${option}`} onClick={() => chooseAnswer(option)} aria-pressed={answers[current] === option} className={`group flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-violet-300 ${answers[current] === option ? (index < 3 ? "border-emerald-300/70 bg-emerald-400/15 text-white ring-1 ring-emerald-300/40" : "border-rose-300/70 bg-rose-400/15 text-white ring-1 ring-rose-300/40") : index < 3 ? "border-emerald-300/15 bg-emerald-400/[0.025] text-white/75 hover:border-emerald-300/40 hover:bg-emerald-400/[0.08] hover:text-white" : "border-rose-300/15 bg-rose-400/[0.025] text-white/75 hover:border-rose-300/40 hover:bg-rose-400/[0.08] hover:text-white"}`}>
+                  <button key={`${currentQuestion.id}-${option}`} onClick={() => chooseAnswer(option)} aria-pressed={answers[current] === option} className={`group flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all duration-150 ease-out active:scale-[0.98] active:brightness-125 motion-reduce:transition-none motion-reduce:active:scale-100 focus:outline-none focus:ring-2 focus:ring-violet-300 ${answers[current] === option ? (index < 3 ? "border-emerald-300/70 bg-emerald-400/15 text-white ring-1 ring-emerald-300/40" : "border-rose-300/70 bg-rose-400/15 text-white ring-1 ring-rose-300/40") : index < 3 ? "border-emerald-300/15 bg-emerald-400/[0.025] text-white/75 hover:border-emerald-300/40 hover:bg-emerald-400/[0.08] hover:text-white" : "border-rose-300/15 bg-rose-400/[0.025] text-white/75 hover:border-rose-300/40 hover:bg-rose-400/[0.08] hover:text-white"}`}>
                     {index < 3 ? <CircleCheck aria-hidden="true" className="answer-agree-icon h-5 w-5 shrink-0" strokeWidth={2} /> : <CircleX aria-hidden="true" className="answer-disagree-icon h-5 w-5 shrink-0" strokeWidth={2} />}{option}
                   </button>
                 ))}
@@ -459,55 +476,57 @@ export default function Home() {
         )}
 
         {stage === "result" && (
-          <section className="my-auto grid w-full gap-6 self-center py-10 md:grid-cols-[.9fr_1.1fr]">
-            <div className="theme-archetype-card relative flex flex-col justify-between overflow-hidden rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.2] via-[#11131f] to-teal-400/[0.08] p-7 shadow-[0_24px_90px_rgba(113,91,230,.12)] sm:p-9">
+          <section className="my-auto grid w-full items-start gap-4 self-center py-4 md:grid-cols-[.9fr_1.1fr] sm:py-6">
+            <div className="theme-archetype-card relative flex flex-col justify-between overflow-hidden rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.2] via-[#11131f] to-teal-400/[0.08] p-4 shadow-[0_24px_90px_rgba(113,91,230,.12)] sm:p-5">
               <ProfileIcon aria-hidden="true" className="absolute -right-8 -top-10 h-36 w-36 text-violet-300 opacity-[0.07]" strokeWidth={1.2} />
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-300">Seu perfil político</p>
-                <div className="mt-5 flex items-center gap-4">
-                  <span aria-hidden="true" className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-violet-200/20 bg-violet-300/10 text-4xl shadow-[0_0_32px_rgba(167,139,250,.18)]"><ProfileIcon className="h-9 w-9 text-violet-200" strokeWidth={1.7} /></span>
-                  <h1 className="text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{archetype.name}</h1>
+                <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-violet-300">Seu perfil político</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-violet-200/20 bg-violet-300/10 shadow-[0_0_32px_rgba(167,139,250,.18)]"><ProfileIcon className="h-7 w-7 text-violet-200" strokeWidth={1.7} /></span>
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">{archetype.name}</h1>
+                    <p className="mt-1 text-xs font-semibold tabular-nums text-teal-200">Compatibilidade: {primaryCompatibility}%</p>
+                  </div>
                 </div>
-                <p className="mt-4 leading-7 text-white/65">{archetype.description}</p>
-                <blockquote className="theme-quote mt-6 rounded-xl border border-white/[0.08] bg-black/15 px-4 py-4 text-sm leading-6 text-teal-100/90">“{archetype.phrase}”</blockquote>
-                <div className="mt-7 rounded-xl border border-violet-300/15 bg-violet-300/[0.06] px-4 py-3.5">
+                <p className="mt-2 text-sm leading-5 text-white/65">{archetype.description}</p>
+                <blockquote className="theme-quote mt-3 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2.5 text-xs leading-5 text-teal-100/90">“{archetype.phrase}”</blockquote>
+                <div className="mt-3 rounded-xl border border-violet-300/15 bg-violet-300/[0.06] px-3 py-2.5">
                   <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-violet-200/65">Posicionamento Geral</p>
-                  <p className="mt-1 text-xl font-semibold text-white">{politicalPosition}</p>
-                  <p className="mt-1 text-xs leading-5 text-white/50">Baseado principalmente nos eixos de Economia e Costumes.</p>
+                  <p className="mt-0.5 text-lg font-semibold text-white">{politicalPosition}</p>
+                  <p className="text-[11px] leading-4 text-white/50">Baseado em Economia e Costumes.</p>
                 </div>
-                <section className="mt-7" aria-labelledby="closest-profiles-title">
+                <section className="mt-4" aria-labelledby="closest-profiles-title">
                   <h2 id="closest-profiles-title" className="text-sm font-semibold">Perfis mais próximos</h2>
-                  <p className="mt-1 text-xs leading-5 text-white/45">Outros perfis que também se aproximam das suas respostas.</p>
-                  <ul className="mt-3 space-y-2">
+                  <ul className="mt-2 space-y-1.5">
                     {closestProfiles.map(({ archetype: profile, compatibility }) => {
                       const NearbyIcon = archetypeIcons[profile.name] ?? Dna;
                       return (
-                        <li key={profile.name} className="theme-panel flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2.5">
-                          <span className="flex min-w-0 items-center gap-2.5">
+                        <li key={profile.name} className="theme-panel flex items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-2">
+                          <span className="flex min-w-0 items-center gap-2">
                             <NearbyIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-violet-300" strokeWidth={1.8} />
-                            <span className="truncate text-sm font-medium">{profile.name}</span>
+                            <span className="truncate text-xs font-medium">{profile.name}</span>
                           </span>
-                          <span className="shrink-0 text-xs tabular-nums text-teal-200">{compatibility}% compatibilidade</span>
+                          <span className="shrink-0 text-[11px] tabular-nums text-teal-200">{compatibility}%</span>
                         </li>
                       );
                     })}
                   </ul>
-                  <p className="mt-2 text-[11px] leading-4 text-white/40">Percentuais indicam proximidade entre respostas e perfis, não uma avaliação política.</p>
+                  <p className="mt-1.5 text-[10px] leading-4 text-white/40">Compatibilidade indica proximidade, não uma avaliação política.</p>
                 </section>
               </div>
-              <div className="mt-8 border-t border-white/[0.08] pt-5">
-                <p className="text-xs leading-5 text-white/40">Um retrato simplificado das suas respostas — não um rótulo definitivo.</p>
-                <button onClick={restart} className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-violet-200 transition hover:text-white">Refazer questionário <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></button>
+              <div className="mt-4 border-t border-white/[0.08] pt-3">
+                <p className="text-[10px] leading-4 text-white/40">Um retrato simplificado das suas respostas — não um rótulo definitivo.</p>
+                <button onClick={restart} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-violet-200 transition hover:text-white">Refazer questionário <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></button>
               </div>
             </div>
-            <div className="theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-6 sm:p-8"><div className="mb-7"><h2 className="text-lg font-semibold">Seus seis eixos</h2><p className="mt-1 text-sm text-white/45">O resultado completo é representado pelos seis eixos abaixo.</p><p className="mt-1 text-xs text-white/35">50% indica o centro; os extremos mostram sua inclinação.</p></div>
-              <div className="space-y-5">{axisInfo.map((axis) => {
+            <div className="theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5"><div className="mb-4"><h2 className="text-base font-semibold">Seus seis eixos</h2><p className="mt-0.5 text-[11px] leading-4 text-white/45">50% indica o centro; os extremos mostram a inclinação.</p></div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">{axisInfo.map((axis) => {
                 const percent = getAxisPercent(axis.key, scores[axis.key], quizQuestions);
                 const AxisIcon = axisIcons[axis.key];
                 return <div key={axis.key}>
-                  <div className="mb-2 flex items-center justify-between gap-3"><span className="flex items-center gap-2 text-sm font-medium text-white/85"><AxisIcon aria-hidden="true" className="h-4 w-4 text-violet-300" strokeWidth={1.8} />{axis.label}</span><span className="text-sm font-semibold tabular-nums text-teal-200">{percent}%</span></div>
-                  <div className="theme-progress-track relative h-2 overflow-hidden rounded-full bg-white/[0.08]" role="progressbar" aria-label={`${axis.label}: ${percent}% em direção a ${axis.high}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${percent}%` }} /></div>
-                  <div className="mt-1.5 flex justify-between gap-3 text-[10px] leading-4 text-white/40"><span>{axis.low}</span><span className="text-right">{axis.high}</span></div>
+                  <div className="mb-1 flex items-center justify-between gap-1"><span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-white/85"><AxisIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-violet-300" strokeWidth={1.8} />{axis.label}</span><span className="text-xs font-semibold tabular-nums text-teal-200">{percent}%</span></div>
+                  <div className="theme-progress-track relative h-1.5 overflow-hidden rounded-full bg-white/[0.08]" role="progressbar" aria-label={`${axis.label}: ${percent}% em direção a ${axis.high}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${percent}%` }} /></div>
+                  <div className="mt-1 flex justify-between gap-1 text-[10px] leading-3 text-white/40"><span>{axis.low}</span><span className="text-right">{axis.high}</span></div>
                 </div>;
               })}</div>
             </div>
@@ -515,7 +534,25 @@ export default function Home() {
         )}
 
         {stage === "result" && (
-          <section className="theme-panel mb-6 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-6 sm:p-8" aria-labelledby="calculation-title">
+          <section className="theme-panel mb-4 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:mb-6 sm:p-5" aria-labelledby="share-result-title">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                <h2 id="share-result-title" className="text-base font-semibold">Compartilhar resultado</h2>
+                <p className="mt-0.5 text-xs text-white/45">Leve seu perfil e os seis eixos para a conversa.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={copyResult} className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1]">Copiar resultado</button>
+                <button onClick={copyResultImage} className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1]">Copiar imagem</button>
+                <button onClick={downloadResultImage} disabled={isGeneratingImage} className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-semibold text-white/85 transition hover:border-teal-300/40 hover:bg-teal-300/[0.1] disabled:cursor-wait disabled:opacity-50">{isGeneratingImage ? "Gerando imagem…" : "Baixar imagem PNG"}</button>
+                <button onClick={shareResult} className="rounded-lg bg-violet-400 px-3 py-2 text-xs font-semibold text-[#11101d] transition hover:bg-violet-300">Compartilhar</button>
+              </div>
+            </div>
+            {shareMessage && <p role="status" className="mt-2 inline-flex items-center gap-2 text-xs text-teal-200">{shareMessage === "Imagem copiada para a área de transferência." && <CircleCheck aria-hidden="true" className="h-4 w-4 shrink-0" />}{shareMessage}</p>}
+          </section>
+        )}
+
+        {stage === "result" && (
+          <section className="theme-panel mb-6 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-8" aria-labelledby="calculation-title">
             <h2 id="calculation-title" className="text-lg font-semibold">Como calculamos seu resultado?</h2>
             <p className="mt-2 text-sm leading-6 text-white/60">Suas respostas são analisadas em seis dimensões:</p>
             <ul className="mt-3 grid gap-2 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
@@ -527,20 +564,21 @@ export default function Home() {
         )}
 
         {stage === "result" && (
-          <section className="theme-panel mb-10 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-6 sm:p-8" aria-labelledby="share-result-title">
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-              <div>
-                <h2 id="share-result-title" className="text-lg font-semibold">Compartilhar resultado</h2>
-                <p className="mt-1 text-sm text-white/45">Leve seu perfil e os seis eixos para a conversa.</p>
+          <section className="theme-panel mb-6 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6" aria-labelledby="support-title">
+            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+              <div className="shrink-0 rounded-2xl bg-white p-3 shadow-sm" aria-label="QR Code Pix">
+                <QRCodeSVG value={pixPayload} size={156} level="M" marginSize={2} bgColor="#ffffff" fgColor="#111827" title="QR Code Pix para apoiar o DNA Político" />
               </div>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={copyResult} className="rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1]">Copiar resultado</button>
-                <button onClick={copyResultImage} className="rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1]">Copiar imagem</button>
-                <button onClick={downloadResultImage} disabled={isGeneratingImage} className="rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-teal-300/40 hover:bg-teal-300/[0.1] disabled:cursor-wait disabled:opacity-50">{isGeneratingImage ? "Gerando imagem…" : "Baixar imagem PNG"}</button>
-                <button onClick={shareResult} className="rounded-lg bg-violet-400 px-4 py-2.5 text-sm font-semibold text-[#11101d] transition hover:bg-violet-300">Compartilhar</button>
+              <div className="w-full text-center sm:text-left">
+                <h2 id="support-title" className="flex items-center justify-center gap-2 text-lg font-semibold sm:justify-start"><Coffee aria-hidden="true" className="h-5 w-5 text-violet-300" />Apoie o DNA Político</h2>
+                <p className="mt-2 text-sm leading-6 text-white/65">Se o DNA Político foi útil para você, considere apoiar o projeto.</p>
+                <p className="mt-2 text-xs leading-5 text-white/45">As contribuições são totalmente opcionais e ajudam a manter a ferramenta online, desenvolver novas funcionalidades e continuar oferecendo o teste gratuitamente para mais pessoas.</p>
+                <button type="button" onClick={copyPix} className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-violet-300/25 bg-violet-300/[0.08] px-4 py-2.5 text-sm font-semibold text-violet-200 transition hover:bg-violet-300/[0.14] focus:outline-none focus:ring-2 focus:ring-violet-300">
+                  <Copy aria-hidden="true" className="h-4 w-4" />Copiar Pix
+                </button>
+                {pixMessage && <p role="status" aria-live="polite" className="mt-2 text-xs text-teal-200">{pixMessage}</p>}
               </div>
             </div>
-            {shareMessage && <p role="status" className="mt-4 inline-flex items-center gap-2 text-sm text-teal-200">{shareMessage === "Imagem copiada para a área de transferência." && <CircleCheck aria-hidden="true" className="h-4 w-4 shrink-0" />}{shareMessage}</p>}
           </section>
         )}
 
