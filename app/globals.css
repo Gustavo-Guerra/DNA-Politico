@@ -136,3 +136,17 @@ button { cursor: pointer; }
 
 :root[data-theme="light"] .answer-agree-icon { color: #047857; }
 :root[data-theme="light"] .answer-disagree-icon { color: #be123c; }
+
+.quadrant-grid-line { background-color: rgb(255 255 255 / 18%); }
+.quadrant-dot { animation: quadrant-dot-enter 480ms cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes quadrant-dot-enter {
+  from { opacity: 0; scale: .35; }
+  to { opacity: 1; scale: 1; }
+}
+
+:root[data-theme="light"] .quadrant-grid-line { background-color: rgb(45 55 72 / 24%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .quadrant-dot { animation: none; }
+}

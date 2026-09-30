@@ -86,8 +86,25 @@ const homeProfiles = [
 const pixPayload = "00020126580014BR.GOV.BCB.PIX0136c39d45db-82be-4237-861e-ba554e50cdcd5204000053039865802BR5920Gustavo Guerra Sales6009SAO PAULO621405101suPsiyNgr63047223";
 
 type ShareAxis = { label: string; percent: number };
+type QuadrantCoordinates = { x: number; y: number };
 
-function createShareImage(archetypeName: string, phrase: string, position: string, axes: ShareAxis[]): Blob {
+function getQuadrantCoordinates(percentages: Record<Axis, number>): QuadrantCoordinates {
+  const economyRight = (50 - percentages.economy) / 50;
+  const nationalismRight = (percentages.nationalism - 50) / 50;
+  const horizontal = economyRight * 0.8 + nationalismRight * 0.2;
+
+  const individualLibertarian = (percentages.individualFreedom - 50) / 50;
+  const securityLibertarian = (50 - percentages.security) / 50;
+  const institutionsLibertarian = (percentages.institutions - 50) / 50;
+  const verticalLibertarian = (individualLibertarian + securityLibertarian + institutionsLibertarian) / 3;
+
+  return {
+    x: 50 + horizontal * 40,
+    y: 50 - verticalLibertarian * 40,
+  };
+}
+
+function createShareImage(archetypeName: string, phrase: string, position: string, axes: ShareAxis[], quadrant: QuadrantCoordinates): Blob {
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = 630;
@@ -172,6 +189,55 @@ function createShareImage(archetypeName: string, phrase: string, position: strin
     context.fill();
   });
 
+  context.fillStyle = "rgba(255,255,255,.06)";
+  context.beginPath();
+  context.roundRect(64, 366, 442, 196, 20);
+  context.fill();
+  context.fillStyle = "rgba(255,255,255,.72)";
+  context.font = "600 12px Arial, sans-serif";
+  context.fillText("MEU POSICIONAMENTO NO QUADRANTE", 84, 389);
+
+  const plotSize = 132;
+  const plotLeft = 219;
+  const plotTop = 410;
+  context.fillStyle = "rgba(255,255,255,.025)";
+  context.beginPath();
+  context.roundRect(plotLeft, plotTop, plotSize, plotSize, 10);
+  context.fill();
+  context.strokeStyle = "rgba(255,255,255,.22)";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(plotLeft + plotSize / 2, plotTop);
+  context.lineTo(plotLeft + plotSize / 2, plotTop + plotSize);
+  context.moveTo(plotLeft, plotTop + plotSize / 2);
+  context.lineTo(plotLeft + plotSize, plotTop + plotSize / 2);
+  context.stroke();
+
+  context.fillStyle = "rgba(255,255,255,.58)";
+  context.font = "11px Arial, sans-serif";
+  context.textAlign = "center";
+  context.fillText("Libertário", plotLeft + plotSize / 2, 405);
+  context.fillText("Autoritário", plotLeft + plotSize / 2, 556);
+  context.textAlign = "right";
+  context.fillText("Esquerda", plotLeft - 9, plotTop + plotSize / 2 + 4);
+  context.textAlign = "left";
+  context.fillText("Direita", plotLeft + plotSize + 9, plotTop + plotSize / 2 + 4);
+
+  const dotX = plotLeft + (quadrant.x / 100) * plotSize;
+  const dotY = plotTop + (quadrant.y / 100) * plotSize;
+  context.fillStyle = "rgba(66,214,191,.28)";
+  context.beginPath();
+  context.arc(dotX, dotY, 11, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#86e6d5";
+  context.strokeStyle = "#11121e";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.arc(dotX, dotY, 6, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+  context.textAlign = "left";
+
   context.fillStyle = "rgba(255,255,255,.38)";
   context.font = "13px Arial, sans-serif";
   context.fillText("Um retrato simplificado das minhas respostas", 64, 582);
@@ -189,12 +255,13 @@ function createShareImage(archetypeName: string, phrase: string, position: strin
 export default function Home() {
   const [stage, setStage] = useState<Stage>("home");
   const [current, setCurrent] = useState(0);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState(questions);
   const [answers, setAnswers] = useState<(Answer | null)[]>(Array(questions.length).fill(null));
   const [shareMessage, setShareMessage] = useState("");
   const [pixMessage, setPixMessage] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
     let savedTheme: string | null = null;
@@ -203,7 +270,7 @@ export default function Home() {
     } catch {
       // O tema escuro continua disponível mesmo se o armazenamento estiver bloqueado.
     }
-    const initialTheme = savedTheme === "light" ? "light" : "dark";
+    const initialTheme = savedTheme === "dark" ? "dark" : "light";
     document.documentElement.dataset.theme = initialTheme;
     setTheme(initialTheme);
   }, []);
@@ -237,11 +304,18 @@ export default function Home() {
   }
 
   function chooseAnswer(answer: Answer) {
+    if (isAdvancing) return;
+
     const next = [...answers];
     next[current] = answer;
     setAnswers(next);
-    if (current === quizQuestions.length - 1) setStage("result");
-    else setCurrent(current + 1);
+    setIsAdvancing(true);
+
+    window.setTimeout(() => {
+      if (current === quizQuestions.length - 1) setStage("result");
+      else setCurrent(current + 1);
+      setIsAdvancing(false);
+    }, 180);
   }
 
   function restart() {
@@ -263,7 +337,9 @@ export default function Home() {
   const currentQuestion = quizQuestions[current];
   const currentAxis = axisInfo.find((axis) => currentQuestion?.effects[axis.key] !== undefined)?.label ?? "Questão";
   const ProfileIcon = archetypeIcons[archetype.name] ?? Dna;
-  const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: getAxisPercent(axis.key, scores[axis.key], quizQuestions) }));
+  const axisPercentages = Object.fromEntries(axisInfo.map((axis) => [axis.key, getAxisPercent(axis.key, scores[axis.key], quizQuestions)])) as Record<Axis, number>;
+  const quadrantCoordinates = getQuadrantCoordinates(axisPercentages);
+  const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: axisPercentages[axis.key] }));
   const shareText = `Meu resultado no DNA Político: ${archetype.name}. Posicionamento geral: ${politicalPosition}. ${shareAxes.map((axis) => `${axis.label}: ${axis.percent}%`).join(" · ")} Confira o seu em ${typeof window !== "undefined" ? window.location.href : "https://dnapolitico.vercel.app"}`;
 
   async function copyResult() {
@@ -288,7 +364,7 @@ export default function Home() {
     setIsGeneratingImage(true);
     setShareMessage("");
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes);
+      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes, quadrantCoordinates);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -310,7 +386,7 @@ export default function Home() {
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes);
+      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes, quadrantCoordinates);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       setShareMessage("Imagem copiada para a área de transferência.");
     } catch {
@@ -331,7 +407,7 @@ export default function Home() {
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes);
+      const blob = createShareImage(archetype.name, archetype.phrase, politicalPosition, shareAxes, quadrantCoordinates);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
       const url = window.location.href;
       if (shareNavigator.canShare?.({ files: [file] })) {
@@ -465,13 +541,13 @@ export default function Home() {
               <h1 className="mb-9 text-2xl font-medium leading-relaxed tracking-[-0.02em] sm:text-3xl">{currentQuestion.text}</h1>
               <div className="grid grid-cols-1 gap-3">
                 {answerOptions.map((option, index) => (
-                  <button key={`${currentQuestion.id}-${option}`} onClick={() => chooseAnswer(option)} aria-pressed={answers[current] === option} className={`group flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all duration-150 ease-out active:scale-[0.98] active:brightness-125 motion-reduce:transition-none motion-reduce:active:scale-100 focus:outline-none focus:ring-2 focus:ring-violet-300 ${answers[current] === option ? (index < 3 ? "border-emerald-300/70 bg-emerald-400/15 text-white ring-1 ring-emerald-300/40" : "border-rose-300/70 bg-rose-400/15 text-white ring-1 ring-rose-300/40") : index < 3 ? "border-emerald-300/15 bg-emerald-400/[0.025] text-white/75 hover:border-emerald-300/40 hover:bg-emerald-400/[0.08] hover:text-white" : "border-rose-300/15 bg-rose-400/[0.025] text-white/75 hover:border-rose-300/40 hover:bg-rose-400/[0.08] hover:text-white"}`}>
+                  <button key={`${currentQuestion.id}-${option}`} onClick={() => chooseAnswer(option)} disabled={isAdvancing} aria-pressed={answers[current] === option} className={`group flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all duration-150 ease-out active:scale-[0.97] active:brightness-125 motion-reduce:transition-none motion-reduce:active:scale-100 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-wait disabled:opacity-100 ${answers[current] === option ? (index < 3 ? "border-emerald-300/80 bg-emerald-400/25 text-white ring-2 ring-emerald-300/50 shadow-[0_0_18px_rgba(52,211,153,.18)]" : "border-rose-300/80 bg-rose-400/25 text-white ring-2 ring-rose-300/50 shadow-[0_0_18px_rgba(251,113,133,.18)]") : index < 3 ? "border-emerald-300/15 bg-emerald-400/[0.025] text-white/75 hover:border-emerald-300/40 hover:bg-emerald-400/[0.08] hover:text-white" : "border-rose-300/15 bg-rose-400/[0.025] text-white/75 hover:border-rose-300/40 hover:bg-rose-400/[0.08] hover:text-white"}`}>
                     {index < 3 ? <CircleCheck aria-hidden="true" className="answer-agree-icon h-5 w-5 shrink-0" strokeWidth={2} /> : <CircleX aria-hidden="true" className="answer-disagree-icon h-5 w-5 shrink-0" strokeWidth={2} />}{option}
                   </button>
                 ))}
               </div>
             </div>
-            <button disabled={current === 0} onClick={() => setCurrent(current - 1)} className="mt-7 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.07] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1] hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-30">← Voltar</button>
+            <button disabled={current === 0 || isAdvancing} onClick={() => setCurrent(current - 1)} className="mt-7 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.07] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-violet-300/40 hover:bg-violet-300/[0.1] hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-30">← Voltar</button>
           </section>
         )}
 
@@ -519,6 +595,7 @@ export default function Home() {
                 <button onClick={restart} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-violet-200 transition hover:text-white">Refazer questionário <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></button>
               </div>
             </div>
+            <div className="space-y-4">
             <div className="theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5"><div className="mb-4"><h2 className="text-base font-semibold">Seus seis eixos</h2><p className="mt-0.5 text-[11px] leading-4 text-white/45">50% indica o centro; os extremos mostram a inclinação.</p></div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">{axisInfo.map((axis) => {
                 const percent = getAxisPercent(axis.key, scores[axis.key], quizQuestions);
@@ -529,6 +606,33 @@ export default function Home() {
                   <div className="mt-1 flex justify-between gap-1 text-[10px] leading-3 text-white/40"><span>{axis.low}</span><span className="text-right">{axis.high}</span></div>
                 </div>;
               })}</div>
+            </div>
+            <section className="theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5" aria-labelledby="quadrant-title">
+              <h2 id="quadrant-title" className="text-base font-semibold">Seu posicionamento no quadrante</h2>
+              <p className="mt-0.5 text-[11px] leading-4 text-white/45">Uma visualização complementar baseada nos seus seis eixos.</p>
+              <div className="mx-auto mt-4 w-full max-w-md">
+                <p className="text-center text-xs font-medium text-white/65">Libertário</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="w-12 shrink-0 text-right text-[10px] font-medium text-white/55 sm:w-14 sm:text-xs">Esquerda</span>
+                  <div
+                    role="img"
+                    aria-label={`Posição aproximada: ${quadrantCoordinates.x < 49 ? "esquerda" : quadrantCoordinates.x > 51 ? "direita" : "centro horizontal"} e ${quadrantCoordinates.y < 49 ? "libertária" : quadrantCoordinates.y > 51 ? "autoritária" : "centro vertical"}.`}
+                    className="quadrant-surface relative aspect-square min-w-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-white/[0.025]"
+                  >
+                    <span aria-hidden="true" className="quadrant-grid-line absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2" />
+                    <span aria-hidden="true" className="quadrant-grid-line absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" />
+                    <span
+                      aria-hidden="true"
+                      className="quadrant-dot absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-teal-300 shadow-[0_0_0_5px_rgba(94,234,212,.2),0_0_18px_rgba(94,234,212,.75)]"
+                      style={{ left: `${quadrantCoordinates.x}%`, top: `${quadrantCoordinates.y}%` }}
+                    />
+                  </div>
+                  <span className="w-12 shrink-0 text-[10px] font-medium text-white/55 sm:w-14 sm:text-xs">Direita</span>
+                </div>
+                <p className="mt-2 text-center text-xs font-medium text-white/65">Autoritário</p>
+              </div>
+              <p className="mt-3 text-center text-[10px] leading-4 text-white/40">Este quadrante é apenas uma representação simplificada do resultado.</p>
+            </section>
             </div>
           </section>
         )}
