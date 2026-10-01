@@ -98,6 +98,9 @@ const politicalReferences: QuadrantReference[] = [
   { id: "tarcisio", name: "Tarcísio de Freitas", x: 63, y: 42, kind: "politician", shareLabelOffset: { x: 14, y: 12, align: "left" } },
   { id: "boulos", name: "Guilherme Boulos", x: 27, y: 60, kind: "politician", shareLabelOffset: { x: 12, y: 14, align: "left" } },
   { id: "rui-costa-pimenta", name: "Rui Costa Pimenta (PCO)", x: 7, y: 51, kind: "politician", shareLabelOffset: { x: 14, y: -18, align: "left" } },
+  { id: "fabio-ostermann", name: "Fábio Ostermann", x: 82, y: 74, kind: "politician", shareLabelOffset: { x: -12, y: -15, align: "right" } },
+  { id: "renan-santos", name: "Renan Santos", x: 82, y: 42, kind: "politician", shareLabelOffset: { x: 14, y: 25, align: "left" } },
+  { id: "luiz-carlos-prestes", name: "Luiz Carlos Prestes", x: 18, y: 30, kind: "politician", shareLabelOffset: { x: 8, y: 30, align: "left" } },
 ];
 
 const homeProfiles = [
