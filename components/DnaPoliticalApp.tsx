@@ -69,14 +69,36 @@ const archetypeIcons: Record<string, LucideIcon> = {
   "Moderado Pluralista": MessagesSquare,
 };
 
-const ideologicalReferences = [
-  { id: "libertarian", label: "Libertário", x: 75, y: 20, description: "Mais autonomia individual e menos intervenção estatal." },
-  { id: "liberal", label: "Liberal", x: 70, y: 40, description: "Mais mercado e maior liberdade econômica." },
-  { id: "conservative", label: "Conservador", x: 65, y: 65, description: "Valorização de tradições, ordem e estabilidade." },
-  { id: "social-democrat", label: "Social-democrata", x: 40, y: 45, description: "Economia de mercado com forte proteção social." },
-  { id: "progressive", label: "Progressista", x: 35, y: 35, description: "Maior abertura a mudanças sociais e pautas de inclusão." },
-  { id: "nationalist", label: "Nacionalista", x: 60, y: 55, description: "Maior valorização da soberania nacional." },
-] as const;
+type QuadrantReference = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  kind: "ideology" | "politician";
+  shareLabelOffset?: { x: number; y: number; align: CanvasTextAlign };
+};
+
+const ideologicalReferences: QuadrantReference[] = [
+  { id: "libertarian", name: "Libertário", x: 75, y: 80, kind: "ideology" },
+  { id: "liberal", name: "Liberal", x: 70, y: 60, kind: "ideology" },
+  { id: "conservative", name: "Conservador", x: 65, y: 35, kind: "ideology", shareLabelOffset: { x: -8, y: 16, align: "right" } },
+  { id: "social-democrat", name: "Social-democrata", x: 40, y: 55, kind: "ideology", shareLabelOffset: { x: -8, y: 7, align: "right" } },
+  { id: "progressive", name: "Progressista", x: 35, y: 65, kind: "ideology", shareLabelOffset: { x: 7, y: 5, align: "left" } },
+  { id: "nationalist", name: "Nacionalista", x: 60, y: 45, kind: "ideology", shareLabelOffset: { x: 8, y: 14, align: "left" } },
+  { id: "communism", name: "Comunismo", x: 18, y: 22, kind: "ideology" },
+  { id: "fascism", name: "Fascismo", x: 86, y: 18, kind: "ideology", shareLabelOffset: { x: -8, y: 12, align: "right" } },
+  { id: "anarchism", name: "Anarquismo", x: 25, y: 84, kind: "ideology" },
+];
+
+const politicalReferences: QuadrantReference[] = [
+  { id: "lula", name: "Luiz Inácio Lula da Silva", x: 35, y: 51, kind: "politician", shareLabelOffset: { x: -14, y: 25, align: "right" } },
+  { id: "bolsonaro", name: "Jair Bolsonaro", x: 72, y: 40, kind: "politician", shareLabelOffset: { x: -14, y: -19, align: "right" } },
+  { id: "ciro", name: "Ciro Gomes", x: 43, y: 51, kind: "politician", shareLabelOffset: { x: 14, y: -23, align: "left" } },
+  { id: "marina", name: "Marina Silva", x: 42, y: 72, kind: "politician", shareLabelOffset: { x: 14, y: 12, align: "left" } },
+  { id: "tarcisio", name: "Tarcísio de Freitas", x: 63, y: 42, kind: "politician", shareLabelOffset: { x: 14, y: 12, align: "left" } },
+  { id: "boulos", name: "Guilherme Boulos", x: 27, y: 60, kind: "politician", shareLabelOffset: { x: 12, y: 14, align: "left" } },
+  { id: "rui-costa-pimenta", name: "Rui Costa Pimenta (PCO)", x: 7, y: 51, kind: "politician", shareLabelOffset: { x: 14, y: -18, align: "left" } },
+];
 
 const homeProfiles = [
   { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "Fernando Henrique Cardoso"] },
@@ -142,7 +164,7 @@ function getQuadrantCoordinates(percentages: Record<Axis, number>): QuadrantCoor
 
   return {
     x: 50 + horizontal * 40,
-    y: 50 - verticalLibertarian * 40,
+    y: 50 + verticalLibertarian * 40,
   };
 }
 
@@ -173,6 +195,7 @@ function createShareImage(
   ideologicalIntensity: IdeologicalIntensity,
   closestProfiles: Array<{ name: string; compatibility: number }>,
   quadrant: QuadrantCoordinates,
+  references: QuadrantReference[],
 ): Blob {
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
@@ -363,10 +386,10 @@ function createShareImage(
   context.textAlign = "center";
   context.fillStyle = "#f5f3ff";
   context.font = "600 12px Arial, sans-serif";
-  context.fillText("↑ Libertário", quadrantCenterX, cardTop + 69);
+  context.fillText("↑ Autoritário", quadrantCenterX, cardTop + 69);
   context.fillStyle = "rgba(255,255,255,.58)";
   context.font = "9px Arial, sans-serif";
-  context.fillText("Mais liberdade individual", quadrantCenterX, cardTop + 82);
+  context.fillText("Mais controle e regras", quadrantCenterX, cardTop + 82);
 
   const plotSize = 300;
   const plotLeft = quadrantCenterX - plotSize / 2;
@@ -408,6 +431,44 @@ function createShareImage(
   context.fillText("Direita →", rightLabelX + 65, plotTop + plotSize / 2 - 3);
   context.fillText("Mais mercado", rightLabelX + 65, plotTop + plotSize / 2 + 11);
 
+  references.forEach((reference) => {
+    const referenceX = plotLeft + (reference.x / 100) * plotSize;
+    const referenceY = plotTop + (reference.y / 100) * plotSize;
+    const referenceColor = reference.kind === "politician" ? "#fb923c" : "#a78bfa";
+    context.save();
+    context.beginPath();
+    context.arc(referenceX, referenceY, 4.5, 0, Math.PI * 2);
+    context.fillStyle = referenceColor;
+    context.strokeStyle = "#11121e";
+    context.lineWidth = 1.5;
+    context.fill();
+    context.stroke();
+    context.font = "8px Arial, sans-serif";
+    context.textAlign = reference.shareLabelOffset?.align ?? (reference.x > 78 ? "right" : "left");
+    context.lineJoin = "round";
+    context.lineWidth = 2.5;
+    context.strokeStyle = "rgba(17,18,30,.92)";
+    context.fillStyle = referenceColor;
+    const labelX = referenceX + (reference.shareLabelOffset?.x ?? (reference.x > 78 ? -6 : 6));
+    const labelY = referenceY + (reference.shareLabelOffset?.y ?? -4);
+    const label = reference.name;
+    const textAlign = context.textAlign;
+    const labelEdgeX = labelX + (textAlign === "right" ? 3 : textAlign === "left" ? -3 : 0);
+    context.beginPath();
+    context.moveTo(referenceX, referenceY);
+    context.lineTo(labelEdgeX, labelY - 3);
+    context.strokeStyle = referenceColor;
+    context.globalAlpha = 0.68;
+    context.lineWidth = 1;
+    context.stroke();
+    context.globalAlpha = 1;
+    context.strokeStyle = "rgba(17,18,30,.92)";
+    context.lineWidth = 2.5;
+    context.strokeText(label, labelX, labelY, 110);
+    context.fillText(label, labelX, labelY, 110);
+    context.restore();
+  });
+
   const dotX = plotLeft + (quadrant.x / 100) * plotSize;
   const dotY = plotTop + (quadrant.y / 100) * plotSize;
   context.save();
@@ -430,10 +491,10 @@ function createShareImage(
   context.textAlign = "center";
   context.fillStyle = "#f5f3ff";
   context.font = "600 12px Arial, sans-serif";
-  context.fillText("↓ Autoritário", quadrantCenterX, plotTop + plotSize + 18);
+  context.fillText("↓ Libertário", quadrantCenterX, plotTop + plotSize + 18);
   context.fillStyle = "rgba(255,255,255,.58)";
   context.font = "9px Arial, sans-serif";
-  context.fillText("Mais controle e regras", quadrantCenterX, plotTop + plotSize + 31);
+  context.fillText("Mais liberdade individual", quadrantCenterX, plotTop + plotSize + 31);
 
   // Eixos com rótulos e barras condensados no mesmo estilo visual da página.
   const axesX = axesCard.x + 17;
@@ -567,6 +628,8 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [showIdeologicalReferences, setShowIdeologicalReferences] = useState(true);
+  const [showPoliticalReferences, setShowPoliticalReferences] = useState(false);
+  const [activeReferenceId, setActiveReferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     let savedTheme: string | null = null;
@@ -602,6 +665,27 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
     if (emailCopyTimeout.current !== null) window.clearTimeout(emailCopyTimeout.current);
   }, []);
+
+  useEffect(() => {
+    if (!activeReferenceId) return;
+    function closeTooltip(event: PointerEvent) {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-quadrant-reference]")) {
+        setActiveReferenceId(null);
+        if (document.activeElement instanceof HTMLElement && document.activeElement.hasAttribute("data-quadrant-reference")) {
+          document.activeElement.blur();
+        }
+      }
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setActiveReferenceId(null);
+    }
+    document.addEventListener("pointerdown", closeTooltip);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeTooltip);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [activeReferenceId]);
 
   function clearShareMessage() {
     if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
@@ -687,6 +771,10 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: axisPercentages[axis.key], low: axis.low, high: axis.high }));
   const ideologicalIntensity = getIdeologicalIntensity(shareAxes);
   const shareClosestProfiles = closestProfiles.map(({ archetype: profile, compatibility }) => ({ name: profile.name, compatibility }));
+  const activeQuadrantReferences = [
+    ...(showIdeologicalReferences ? ideologicalReferences : []),
+    ...(showPoliticalReferences ? politicalReferences : []),
+  ];
   const shareLandingUrl = "https://dnapolitico.vercel.app";
   const sharedUrl = typeof window !== "undefined"
     ? `${window.location.origin}/r?s=${axisInfo.map((axis) => axisPercentages[axis.key]).join(",")}`
@@ -741,7 +829,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     setIsGeneratingImage(true);
     clearShareMessage();
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates, activeQuadrantReferences);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -763,7 +851,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates, activeQuadrantReferences);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       showShareMessage("Imagem copiada para a área de transferência.");
     } catch {
@@ -784,7 +872,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates, activeQuadrantReferences);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
       if (shareNavigator.canShare?.({ files: [file] })) {
         await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, files: [file] });
@@ -962,22 +1050,39 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                 <h2 id="quadrant-title" className="text-lg font-semibold sm:text-xl">Seu posicionamento no quadrante</h2>
                 <p className="mt-0.5 text-[11px] leading-4 text-white/60">Seu posicionamento aproximado no espectro político.</p>
               </div>
-              <label className="mt-2 inline-flex w-fit cursor-pointer items-center gap-2 self-center text-[10px] font-medium text-white/65">
-                <input
-                  type="checkbox"
-                  checked={showIdeologicalReferences}
-                  onChange={(event) => setShowIdeologicalReferences(event.target.checked)}
-                  className="h-3.5 w-3.5 accent-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-                />
-                Mostrar referências ideológicas
-              </label>
+              <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] font-medium text-white/65">
+                <label className="inline-flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={showIdeologicalReferences}
+                    onChange={(event) => {
+                      setShowIdeologicalReferences(event.target.checked);
+                      setActiveReferenceId(null);
+                    }}
+                    className="h-3.5 w-3.5 accent-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  />
+                  Referências ideológicas
+                </label>
+                <label className="inline-flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={showPoliticalReferences}
+                    onChange={(event) => {
+                      setShowPoliticalReferences(event.target.checked);
+                      setActiveReferenceId(null);
+                    }}
+                    className="h-3.5 w-3.5 accent-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  />
+                  Figuras políticas
+                </label>
+              </div>
               <div className="flex flex-1 flex-col justify-center">
-                <p className="mt-2 text-center text-sm font-semibold text-white/85">↑ Libertário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais liberdade individual</span></p>
+                <p className="mt-2 text-center text-sm font-semibold text-white/85">↑ Autoritário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais controle e regras</span></p>
                 <div className="mt-1 grid w-full grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-1.5 sm:grid-cols-[4rem_minmax(0,1fr)_4rem] sm:gap-2">
                   <span aria-hidden="true" className="quadrant-label flex flex-col items-start rounded-md px-1 py-1 text-[9px] font-semibold leading-3 sm:text-[10px]">← Esquerda<span className="text-[8px] font-normal opacity-75 sm:text-[9px]">Mais Estado</span></span>
                   <div
-                    role="img"
-                    aria-label={`Posição aproximada: ${quadrantCoordinates.x < 49 ? "esquerda" : quadrantCoordinates.x > 51 ? "direita" : "centro horizontal"} e ${quadrantCoordinates.y < 49 ? "libertária" : quadrantCoordinates.y > 51 ? "autoritária" : "centro vertical"}.`}
+                    role="group"
+                    aria-label={`Posição aproximada: ${quadrantCoordinates.x < 49 ? "esquerda" : quadrantCoordinates.x > 51 ? "direita" : "centro horizontal"} e ${quadrantCoordinates.y < 49 ? "autoritária" : quadrantCoordinates.y > 51 ? "libertária" : "centro vertical"}.`}
                     className="quadrant-surface relative mx-auto aspect-square w-full max-w-[20rem] rounded-2xl border border-white/15 bg-white/[0.035] shadow-[inset_0_0_40px_rgba(139,124,246,.07),0_12px_35px_rgba(16,185,129,.05)]"
                   >
                     <span aria-hidden="true" className="quadrant-grid-line absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2" />
@@ -987,34 +1092,38 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                       className="quadrant-dot absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-950 bg-teal-300 shadow-[0_0_0_8px_rgba(94,234,212,.22),0_0_32px_rgba(94,234,212,.9)]"
                       style={{ left: `${quadrantCoordinates.x}%`, top: `${quadrantCoordinates.y}%` }}
                     />
-                    {showIdeologicalReferences && ideologicalReferences.map((reference) => (
+                    {activeQuadrantReferences.map((reference) => (
                       <button
                         key={reference.id}
                         type="button"
-                        aria-label={`${reference.label}: ${reference.description}`}
-                        title={`${reference.label}\n${reference.description}`}
-                        className="group absolute z-10 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full focus:z-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 hover:z-30"
+                        data-quadrant-reference
+                        aria-label={`${reference.name}, ${reference.kind === "ideology" ? "ideologia" : "figura política"}`}
+                        aria-expanded={activeReferenceId === reference.id}
+                        title={`${reference.name} — ${reference.kind === "ideology" ? "ideologia" : "figura política"}`}
+                        onClick={() => setActiveReferenceId((activeId) => activeId === reference.id ? null : reference.id)}
+                        className="quadrant-reference-trigger group absolute z-10 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full focus:z-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 hover:z-30"
                         style={{ left: `${reference.x}%`, top: `${reference.y}%` }}
                       >
-                        <span aria-hidden="true" className="quadrant-reference-dot h-2 w-2 rounded-full border transition group-hover:scale-125 group-focus:scale-125" />
-                        <span aria-hidden="true" className="quadrant-reference-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 w-36 -translate-x-1/2 rounded-lg border px-2.5 py-2 text-left opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-                          <span className="quadrant-reference-tooltip-title block text-[10px] font-semibold">{reference.label}</span>
-                          <span className="quadrant-reference-tooltip-description mt-0.5 block text-[9px] leading-3">{reference.description}</span>
+                        <span aria-hidden="true" className={`${reference.kind === "politician" ? "quadrant-politician-dot" : "quadrant-reference-dot"} h-2 w-2 rounded-full border transition group-hover:scale-125 group-focus:scale-125`} />
+                        <span aria-hidden="true" className={`quadrant-reference-tooltip pointer-events-none absolute z-20 w-36 -translate-x-1/2 rounded-lg border px-2.5 py-2 text-left shadow-xl transition-opacity ${reference.y > 70 ? "bottom-full mb-1.5" : "top-full mt-1.5"} ${reference.x < 12 ? "left-0 translate-x-0" : reference.x > 88 ? "right-0 translate-x-0" : "left-1/2"} ${activeReferenceId === reference.id ? "opacity-100" : "opacity-0"}`}>
+                          <span className={`block text-[10px] font-semibold ${reference.kind === "politician" ? "quadrant-politician-tooltip-title" : "quadrant-reference-tooltip-title"}`}>{reference.name}</span>
+                          <span className="quadrant-reference-tooltip-description mt-0.5 block text-[9px] leading-3">{reference.kind === "ideology" ? "Ideologia" : "Figura política"}</span>
                         </span>
                       </button>
                     ))}
                   </div>
                   <span aria-hidden="true" className="quadrant-label flex flex-col items-end rounded-md px-1 py-1 text-right text-[9px] font-semibold leading-3 sm:text-[10px]">Direita →<span className="text-[8px] font-normal opacity-75 sm:text-[9px]">Mais mercado</span></span>
                 </div>
-                <p className="mt-1 text-center text-sm font-semibold text-white/85">↓ Autoritário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais controle e regras</span></p>
+                <p className="mt-1 text-center text-sm font-semibold text-white/85">↓ Libertário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais liberdade individual</span></p>
               </div>
-              {showIdeologicalReferences && (
+              {activeQuadrantReferences.length > 0 && (
                 <div className="mt-auto pt-2">
                   <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[9px] text-white/55" aria-label="Legenda do quadrante">
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border-[2px] border-slate-950 bg-teal-300 shadow-[0_0_8px_rgba(94,234,212,.7)]" />Você</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="quadrant-reference-dot h-2 w-2 rounded-full border" />Referência ideológica</span>
+                    {showIdeologicalReferences && <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="quadrant-reference-dot h-2 w-2 rounded-full border" />Referências ideológicas</span>}
+                    {showPoliticalReferences && <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="quadrant-politician-dot h-2 w-2 rounded-full border" />Figuras políticas</span>}
                   </div>
-                  <p className="mx-auto mt-1.5 max-w-md text-center text-[9px] leading-3 text-white/40">Referências ideológicas são aproximações visuais usadas apenas para facilitar a interpretação do mapa. Não representam partidos, políticos ou organizações.</p>
+                  <p className="mx-auto mt-1.5 max-w-md text-center text-[9px] leading-3 text-white/40">As posições são aproximações visuais nos eixos do quadrante.</p>
                 </div>
               )}
             </section>
