@@ -289,39 +289,7 @@ function createShareImage(
   context.fillStyle = "#d5ceff";
   context.fillText(badgeText, profileX + 10, badgeY + 14);
 
-  const intensityTop = badgeY + 29;
-  context.fillStyle = "rgba(94,234,212,.055)";
-  context.strokeStyle = "rgba(94,234,212,.2)";
-  context.beginPath();
-  context.roundRect(profileX, intensityTop, profileWidth, 64, 10);
-  context.fill();
-  context.stroke();
-  context.textAlign = "left";
-  context.fillStyle = "#9cefe2";
-  context.font = "700 7px Arial, sans-serif";
-  context.fillText("INTENSIDADE IDEOLÓGICA", profileX + 9, intensityTop + 12);
-  context.textAlign = "right";
-  context.fillStyle = "#86e6d5";
-  context.font = "700 12px Arial, sans-serif";
-  context.fillText(`${ideologicalIntensity.percent}%`, profileX + profileWidth - 9, intensityTop + 13);
-  context.fillStyle = "rgba(255,255,255,.13)";
-  context.beginPath();
-  context.roundRect(profileX + 9, intensityTop + 19, profileWidth - 18, 4, 2);
-  context.fill();
-  const intensityGradient = context.createLinearGradient(profileX + 9, 0, profileX + profileWidth - 9, 0);
-  intensityGradient.addColorStop(0, "#8b7cf6");
-  intensityGradient.addColorStop(1, "#42d6bf");
-  context.fillStyle = intensityGradient;
-  context.beginPath();
-  context.roundRect(profileX + 9, intensityTop + 19, (profileWidth - 18) * ideologicalIntensity.percent / 100, 4, 2);
-  context.fill();
-  context.textAlign = "left";
-  context.fillStyle = "#f7f6ff";
-  context.font = "700 9px Arial, sans-serif";
-  context.fillText(ideologicalIntensity.label, profileX + 9, intensityTop + 35);
-  drawWrappedText(ideologicalIntensity.description, profileX + 9, intensityTop + 47, profileWidth - 18, 9, "7px Arial, sans-serif", "rgba(255,255,255,.62)", 2);
-
-  const descriptionBottom = drawWrappedText(description, profileX, intensityTop + 73, profileWidth, 14, "12px Arial, sans-serif", "rgba(255,255,255,.76)", 2);
+  const descriptionBottom = drawWrappedText(description, profileX, badgeY + 43, profileWidth, 14, "12px Arial, sans-serif", "rgba(255,255,255,.76)", 2);
   const quoteCardY = descriptionBottom + 8;
   context.fillStyle = "rgba(94,234,212,.09)";
   context.strokeStyle = "rgba(94,234,212,.24)";
@@ -335,7 +303,11 @@ function createShareImage(
   context.fillText("“", profileX + 7, quoteCardY + 21);
   drawWrappedText(shareQuote, profileX + 23, quoteCardY + 14, profileWidth - 31, 11, "italic 10px Arial, sans-serif", "#d8fff7", 2);
 
-  const compatibilityTop = quoteCardY + 39;
+  const positionCardY = cardTop + cardHeight - 75;
+  const compatibilityStart = quoteCardY + 39;
+  const compatibilityHeight = 88;
+  const remainingGap = positionCardY - 12 - (compatibilityStart + compatibilityHeight);
+  const compatibilityTop = compatibilityStart + Math.max(0, remainingGap / 2);
   const circle = { x: profileX + 39, y: compatibilityTop + 37, radius: 34 };
   context.save();
   context.lineWidth = 5;
@@ -360,7 +332,6 @@ function createShareImage(
   context.fillText("COMPATIBILIDADE", circle.x, circle.y + circle.radius + 14);
   drawWrappedText(`Suas respostas se alinham em ${compatibility}% com este perfil.`, profileX + 86, compatibilityTop + 31, profileWidth - 86, 13, "10px Arial, sans-serif", "rgba(255,255,255,.68)", 4);
 
-  const positionCardY = cardTop + cardHeight - 75;
   context.fillStyle = "rgba(255,255,255,.035)";
   context.strokeStyle = "rgba(255,255,255,.1)";
   context.beginPath();
@@ -473,7 +444,7 @@ function createShareImage(
   context.fillText("SEUS SEIS EIXOS", axesX, cardTop + 27);
   drawWrappedText("50% indica equilíbrio. Quanto mais próximo das extremidades, maior a inclinação.", axesX, cardTop + 45, axesWidth, 12, "9px Arial, sans-serif", "rgba(255,255,255,.58)", 2);
   axes.forEach((axis, index) => {
-    const rowY = cardTop + 89 + index * 52;
+    const rowY = cardTop + 85 + index * 46;
     context.textAlign = "left";
     context.fillStyle = "#f7f6ff";
     context.font = "600 12px Arial, sans-serif";
@@ -500,6 +471,38 @@ function createShareImage(
     context.textAlign = "right";
     context.fillText(axis.high, axesX + axesWidth, rowY + 25);
   });
+
+  const intensityTop = cardTop + 354;
+  context.strokeStyle = "rgba(255,255,255,.12)";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(axesX, intensityTop);
+  context.lineTo(axesX + axesWidth, intensityTop);
+  context.stroke();
+  context.textAlign = "left";
+  context.fillStyle = "#9cefe2";
+  context.font = "700 8px Arial, sans-serif";
+  context.fillText("INTENSIDADE IDEOLÓGICA", axesX, intensityTop + 14);
+  context.textAlign = "right";
+  context.fillStyle = "#86e6d5";
+  context.font = "700 10px Arial, sans-serif";
+  context.fillText(`${ideologicalIntensity.percent}%`, axesX + axesWidth, intensityTop + 14);
+  context.fillStyle = "rgba(255,255,255,.13)";
+  context.beginPath();
+  context.roundRect(axesX, intensityTop + 20, axesWidth, 4, 2);
+  context.fill();
+  const intensityGradient = context.createLinearGradient(axesX, 0, axesX + axesWidth, 0);
+  intensityGradient.addColorStop(0, "#8b7cf6");
+  intensityGradient.addColorStop(1, "#42d6bf");
+  context.fillStyle = intensityGradient;
+  context.beginPath();
+  context.roundRect(axesX, intensityTop + 20, (axesWidth * ideologicalIntensity.percent) / 100, 4, 2);
+  context.fill();
+  context.textAlign = "left";
+  context.fillStyle = "#f7f6ff";
+  context.font = "700 9px Arial, sans-serif";
+  context.fillText(ideologicalIntensity.label, axesX, intensityTop + 37);
+  drawWrappedText(ideologicalIntensity.description, axesX, intensityTop + 49, axesWidth, 9, "7px Arial, sans-serif", "rgba(255,255,255,.62)", 2);
 
   // Perfis semelhantes em uma faixa enxuta abaixo das três colunas.
   context.textAlign = "left";
@@ -771,7 +774,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   async function shareResult() {
     type ShareNavigator = Navigator & {
       canShare?: (data: { files: File[] }) => boolean;
-      share?: (data: { title: string; text: string; url: string; files?: File[] }) => Promise<void>;
+      share?: (data: { title: string; text: string; files?: File[] }) => Promise<void>;
     };
     const shareNavigator = navigator as ShareNavigator;
     if (!shareNavigator.share) {
@@ -783,11 +786,10 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     try {
       const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
-      const url = shareLandingUrl;
       if (shareNavigator.canShare?.({ files: [file] })) {
-        await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, url, files: [file] });
+        await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, files: [file] });
       } else {
-        await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, url });
+        await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText });
       }
       showShareMessage("Compartilhamento iniciado!");
     } catch (error) {
@@ -801,7 +803,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   }
 
   return (
-    <main className={`min-h-screen px-5 sm:px-8 ${stage === "result" ? "py-4" : "py-8 sm:py-12"}`}>
+    <main className={`min-h-screen px-5 sm:px-8 ${stage === "result" ? "py-4 pb-24 md:pb-4" : "py-8 sm:py-12"}`}>
       <div className={`mx-auto flex ${stage === "result" ? "min-h-[calc(100vh-2rem)]" : "min-h-[calc(100vh-4rem)]"} w-full ${stage === "result" ? "max-w-6xl" : "max-w-5xl"} flex-col`}>
         <header className="flex items-center justify-between">
           <button onClick={() => stage === "quiz" ? setStage("home") : restart()} className="flex items-center gap-2.5 text-sm font-semibold tracking-wide text-white/90" aria-label={stage === "quiz" ? "Voltar ao início sem apagar respostas" : "Voltar ao início"}>
@@ -912,17 +914,6 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                 <h1 className="min-w-0 text-xl font-semibold leading-tight tracking-[-0.03em] sm:text-2xl">{archetype.name}</h1>
               </div>
               <span className="mt-2 inline-flex w-fit items-center rounded-full border border-violet-300/30 bg-violet-300/[0.12] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.08em] text-violet-200">{politicalPosition}</span>
-              <div className="mt-2 rounded-xl border border-teal-200/20 bg-teal-200/[0.06] px-3 py-2 shadow-[0_0_22px_rgba(94,234,212,.08)]" aria-label={`Intensidade ideológica: ${ideologicalIntensity.percent}%, ${ideologicalIntensity.label}. ${ideologicalIntensity.description}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-[9px] font-bold uppercase tracking-[.1em] text-teal-200">Intensidade ideológica</h2>
-                  <span className="text-sm font-bold tabular-nums text-teal-200">{ideologicalIntensity.percent}%</span>
-                </div>
-                <div className="theme-progress-track mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.1]" aria-hidden="true">
-                  <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${ideologicalIntensity.percent}%` }} />
-                </div>
-                <p className="mt-1 text-[10px] font-semibold text-white/85">{ideologicalIntensity.label}</p>
-                <p className="text-[9px] leading-3 text-white/55">{ideologicalIntensity.description}</p>
-              </div>
               <p className="mt-2 text-xs leading-4 text-white/65">{archetype.description}</p>
               <blockquote className="theme-quote mt-2 flex gap-2 rounded-xl border border-teal-200/20 bg-teal-200/[0.06] px-3 py-2 text-sm font-medium italic leading-5 text-teal-100/90 shadow-[0_0_18px_rgba(94,234,212,.06)]"><span aria-hidden="true" className="-mt-1 shrink-0 text-2xl font-semibold not-italic text-violet-300">“</span><span>{archetype.shareQuote}</span></blockquote>
               <div className="mt-3 flex items-center gap-3 text-teal-200" role="img" aria-label={`Compatibilidade: ${primaryCompatibility}%. Suas respostas se alinham em ${primaryCompatibility}% com este perfil.`}>
@@ -1049,7 +1040,18 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                   );
                 })}
               </div>
-              <div className="mt-auto pt-8">
+              <div className="mt-4 border-t border-white/[0.1] pt-3" aria-label={`Intensidade ideológica: ${ideologicalIntensity.percent}%, ${ideologicalIntensity.label}. ${ideologicalIntensity.description}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[.1em] text-teal-200">Intensidade ideológica</h3>
+                  <span className="text-xs font-bold tabular-nums text-teal-200">{ideologicalIntensity.percent}%</span>
+                </div>
+                <div className="theme-progress-track mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.1]" aria-hidden="true">
+                  <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${ideologicalIntensity.percent}%` }} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold leading-4 text-white/85">{ideologicalIntensity.label}</p>
+                <p className="text-[9px] leading-3 text-white/55">{ideologicalIntensity.description}</p>
+              </div>
+              <div className="mt-auto pt-4">
                 <div className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3">
                   <h3 className="text-[11px] font-semibold text-white/75">Como ler os percentuais</h3>
                   <div className="mt-2 flex items-center justify-between text-[9px] font-medium tabular-nums text-white/50">
@@ -1175,6 +1177,16 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
           {emailCopyFeedback?.location === "footer" && <span role="status" aria-live="polite" className="sr-only">{emailCopyFeedback.text}</span>}
         </footer>
       </div>
+      {stage === "result" && (
+        <button
+          type="button"
+          onClick={shareResult}
+          className="mobile-share-cta md:hidden inline-flex items-center justify-center gap-2 rounded-xl bg-violet-400 px-5 py-3.5 text-sm font-semibold text-[#11101d] shadow-[0_8px_24px_rgba(139,124,246,.32)] transition hover:bg-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200"
+        >
+          <Share2 aria-hidden="true" className="h-4 w-4" />
+          Compartilhar resultado
+        </button>
+      )}
     </main>
   );
 }
