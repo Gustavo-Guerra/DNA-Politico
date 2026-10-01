@@ -684,10 +684,11 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: axisPercentages[axis.key], low: axis.low, high: axis.high }));
   const ideologicalIntensity = getIdeologicalIntensity(shareAxes);
   const shareClosestProfiles = closestProfiles.map(({ archetype: profile, compatibility }) => ({ name: profile.name, compatibility }));
+  const shareLandingUrl = "https://dnapolitico.vercel.app";
   const sharedUrl = typeof window !== "undefined"
     ? `${window.location.origin}/r?s=${axisInfo.map((axis) => axisPercentages[axis.key]).join(",")}`
     : `https://dnapolitico.vercel.app/r?s=${axisInfo.map((axis) => axisPercentages[axis.key]).join(",")}`;
-  const shareText = `Meu resultado no DNA Político: ${archetype.name}. Posicionamento geral: ${politicalPosition}. ${shareAxes.map((axis) => `${axis.label}: ${axis.percent}%`).join(" · ")} Confira o seu: ${sharedUrl}`;
+  const shareText = `Fiz o DNA Político.\n\nResultado:\n${archetype.name}\n\n"${archetype.shareQuote}"\n\nQual foi o seu?\n\n${shareLandingUrl}`;
 
   async function copyResult() {
     try {
@@ -782,7 +783,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     try {
       const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
-      const url = sharedUrl;
+      const url = shareLandingUrl;
       if (shareNavigator.canShare?.({ files: [file] })) {
         await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, url, files: [file] });
       } else {
