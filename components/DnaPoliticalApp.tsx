@@ -23,6 +23,7 @@ import {
   Landmark,
   Leaf,
   Link2,
+  Mail,
   MessagesSquare,
   Scale,
   Shield,
@@ -38,6 +39,7 @@ import { answerOptions, axisInfo, calculateScores, getArchetype, getArchetypeSim
 import type { Axis, Question } from "@/data/questions";
 
 type Stage = "home" | "quiz" | "result";
+type EmailCopyLocation = "contact" | "footer";
 
 const axisIcons: Record<Axis, LucideIcon> = {
   economy: TrendingUp,
@@ -100,6 +102,14 @@ const pixPayload = "00020126580014BR.GOV.BCB.PIX0136c39d45db-82be-4237-861e-ba55
 type ShareAxis = { label: string; percent: number; low: string; high: string };
 type QuadrantCoordinates = { x: number; y: number };
 type IdeologicalIntensity = { percent: number; label: string; description: string };
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M18.9 1.2h3.7l-8.1 9.2L24 23.3h-7.4l-5.8-7.6-6.7 7.6H.4L9 13.5 0 1.2h7.6l5.2 6.9 6.1-6.9Zm-1.3 19.8h2L6.5 3.3H4.4l13.2 17.7Z" />
+    </svg>
+  );
+}
 
 function getIdeologicalIntensity(axes: ShareAxis[]): IdeologicalIntensity {
   const averageDistance = axes.reduce((sum, axis) => sum + Math.abs(axis.percent - 50), 0) / axes.length;
@@ -538,6 +548,8 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const [shareMessage, setShareMessage] = useState("");
   const shareMessageTimeout = useRef<number | null>(null);
   const [pixMessage, setPixMessage] = useState("");
+  const [emailCopyFeedback, setEmailCopyFeedback] = useState<{ location: EmailCopyLocation; text: string } | null>(null);
+  const emailCopyTimeout = useRef<number | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [showIdeologicalReferences, setShowIdeologicalReferences] = useState(true);
@@ -574,6 +586,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
 
   useEffect(() => () => {
     if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
+    if (emailCopyTimeout.current !== null) window.clearTimeout(emailCopyTimeout.current);
   }, []);
 
   function clearShareMessage() {
@@ -681,6 +694,23 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     } catch {
       setPixMessage("Não foi possível copiar automaticamente. Tente novamente neste navegador.");
     }
+  }
+
+  async function copyContactEmail(location: EmailCopyLocation) {
+    let text = "E-mail copiado.";
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard API indisponível");
+      await navigator.clipboard.writeText("guuhguerra22@gmail.com");
+    } catch {
+      text = "Não foi possível copiar. Selecione o endereço acima para copiá-lo.";
+    }
+
+    if (emailCopyTimeout.current !== null) window.clearTimeout(emailCopyTimeout.current);
+    setEmailCopyFeedback({ location, text });
+    emailCopyTimeout.current = window.setTimeout(() => {
+      setEmailCopyFeedback(null);
+      emailCopyTimeout.current = null;
+    }, 3500);
   }
 
   async function copyResultLink() {
@@ -1075,7 +1105,63 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
           </div>
         )}
 
-        <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.07] pt-5 text-[11px] text-white/35"><span>DNA Político</span><span>Suas respostas são processadas neste navegador.</span></footer>
+        {stage === "result" && (
+          <section className="theme-panel mb-6 w-full rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5" aria-labelledby="contact-title">
+            <div className="max-w-3xl">
+              <h2 id="contact-title" className="text-lg font-semibold tracking-tight">Sugestões, críticas ou ideias?</h2>
+              <p className="mt-2 text-sm leading-6 text-white/60">Este projeto ainda está evoluindo. Se você encontrou algum erro, tem sugestões de melhorias ou quer acompanhar novos projetos, fique à vontade para entrar em contato.</p>
+              <p className="mt-3 text-sm font-medium text-violet-200">Gostou do DNA Político? Compartilhe seu resultado e marque @guuhguerra.</p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <article className="theme-panel flex flex-col rounded-xl border border-white/10 bg-white/[0.035] p-4">
+                <div className="flex items-center gap-3">
+                  <span className="theme-brand-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-violet-200"><Mail aria-hidden="true" className="h-5 w-5" /></span>
+                  <div>
+                    <h3 className="font-semibold">E-mail</h3>
+                    <p className="mt-1 text-sm text-white/60">Envie sugestões, críticas ou relate um erro.</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a href="mailto:guuhguerra22@gmail.com" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-sm font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.08] focus:outline-none focus:ring-2 focus:ring-violet-300">
+                    guuhguerra22@gmail.com <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+                  </a>
+                  <button type="button" onClick={() => copyContactEmail("contact")} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-sm font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.08] focus:outline-none focus:ring-2 focus:ring-violet-300">
+                    <Copy aria-hidden="true" className="h-4 w-4" />Copiar e-mail
+                  </button>
+                </div>
+                {emailCopyFeedback?.location === "contact" && <p role="status" aria-live="polite" className="mt-2 text-xs text-teal-200">{emailCopyFeedback.text}</p>}
+              </article>
+
+              <article className="theme-panel flex flex-col rounded-xl border border-white/10 bg-white/[0.035] p-4">
+                <div className="flex items-center gap-3">
+                  <span className="theme-brand-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-violet-200"><XIcon className="h-4 w-4" /></span>
+                  <div>
+                    <h3 className="font-semibold">@guuhguerra</h3>
+                    <p className="mt-1 text-sm text-white/60">Compartilhe seu resultado ou envie sugestões.</p>
+                  </div>
+                </div>
+                <a href="https://x.com/guuhguerra" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-sm font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.08] focus:outline-none focus:ring-2 focus:ring-violet-300">
+                  Seguir no X <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+                </a>
+              </article>
+            </div>
+          </section>
+        )}
+
+        <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-5 text-[11px] text-white/35">
+          <span>DNA Político</span>
+          <span className="mr-auto sm:mr-0">Suas respostas são processadas neste navegador.</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-white/50">
+            <span className="text-white/45">Entre em contato ou envie sugestões:</span>
+            <nav aria-label="Contato" className="flex items-center gap-3">
+              <a href="https://x.com/guuhguerra" target="_blank" rel="noopener noreferrer" aria-label="X: @guuhguerra" title="X: @guuhguerra" className="inline-flex items-center gap-1.5 rounded p-1 transition hover:text-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300"><XIcon className="h-3.5 w-3.5" /><span>@guuhguerra</span></a>
+              <a href="mailto:guuhguerra22@gmail.com" aria-label="Enviar e-mail para guuhguerra22@gmail.com" title="E-mail: guuhguerra22@gmail.com" className="inline-flex items-center gap-1.5 rounded p-1 transition hover:text-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300"><Mail aria-hidden="true" className="h-3.5 w-3.5" /><span>guuhguerra22@gmail.com</span></a>
+              <button type="button" onClick={() => copyContactEmail("footer")} aria-label="Copiar endereço de e-mail" className="inline-flex items-center gap-1.5 rounded p-1 transition hover:text-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-300"><Copy aria-hidden="true" className="h-3.5 w-3.5" /><span>{emailCopyFeedback?.location === "footer" ? "E-mail copiado" : "Copiar e-mail"}</span></button>
+            </nav>
+          </div>
+          {emailCopyFeedback?.location === "footer" && <span role="status" aria-live="polite" className="sr-only">{emailCopyFeedback.text}</span>}
+        </footer>
       </div>
     </main>
   );
