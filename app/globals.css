@@ -66,6 +66,10 @@ body {
   color: #62558f !important;
 }
 
+:root[data-theme="light"] .home-profile-examples {
+  color: #5948b5 !important;
+}
+
 :root[data-theme="light"] [class~="text-teal-200"] {
   color: #087568 !important;
 }
@@ -130,16 +134,16 @@ button { cursor: pointer; }
 
 .answer-agree-icon { color: #34d399; }
 .answer-disagree-icon { color: #fb7185; }
-.historical-profile > summary::-webkit-details-marker { display: none; }
-.historical-profile > summary::marker { content: ""; }
-.historical-profile[open] .historical-chevron { transform: rotate(180deg); }
-
 :root[data-theme="light"] .answer-agree-icon { color: #047857; }
 :root[data-theme="light"] .answer-disagree-icon { color: #be123c; }
 
 .quadrant-grid-line { background-color: rgb(255 255 255 / 18%); }
 .quadrant-dot { animation: quadrant-dot-enter 480ms cubic-bezier(.2,.8,.2,1) both; }
 .quadrant-label { color: rgb(255 255 255 / 82%); background-color: rgb(12 15 25 / 72%); }
+.quadrant-reference-dot { border-color: #ddd6fe; background-color: #8b72e8; box-shadow: 0 0 0 2px rgb(139 114 232 / 18%), 0 0 9px rgb(139 114 232 / 55%); }
+.quadrant-reference-tooltip { background-color: #090b12; border-color: rgb(167 139 250 / 45%); }
+.quadrant-reference-tooltip-title { color: #ddd6fe; }
+.quadrant-reference-tooltip-description { color: #cbd5e1; }
 .methodology-details[open] .methodology-chevron { transform: rotate(180deg); }
 
 @keyframes quadrant-dot-enter {
@@ -149,6 +153,10 @@ button { cursor: pointer; }
 
 :root[data-theme="light"] .quadrant-grid-line { background-color: rgb(45 55 72 / 24%); }
 :root[data-theme="light"] .quadrant-label { color: #344158; background-color: rgb(255 255 255 / 88%); }
+:root[data-theme="light"] .quadrant-reference-dot { border-color: #fff; background-color: #5c43bd; box-shadow: 0 0 0 2px rgb(92 67 189 / 28%), 0 0 8px rgb(92 67 189 / 48%); }
+:root[data-theme="light"] .quadrant-reference-tooltip { background-color: #fff; border-color: rgb(92 67 189 / 45%); }
+:root[data-theme="light"] .quadrant-reference-tooltip-title { color: #49369d; }
+:root[data-theme="light"] .quadrant-reference-tooltip-description { color: #344158; }
 :root[data-theme="light"] [class~="theme-quadrant-card"] {
   background-image: linear-gradient(135deg, #f0edff 0%, #fff 58%, #e7f8f4 100%) !important;
   border-color: rgb(110 91 196 / 24%) !important;

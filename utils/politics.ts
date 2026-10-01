@@ -1,23 +1,30 @@
 import type { Axis, Question } from "@/data/questions";
 
 export const answerOptions = [
-  "Concordo plenamente",
+  "Concordo muito",
   "Concordo",
-  "Concordo parcialmente",
-  "Discordo parcialmente",
+  "Concordo um pouco",
+  "Discordo um pouco",
   "Discordo",
-  "Discordo plenamente",
+  "Discordo muito",
 ] as const;
 
 export type Answer = (typeof answerOptions)[number];
 export type Scores = Record<Axis, number>;
 
 export const scoreMap: Record<Answer, number> = {
-  "Concordo plenamente": 3,
+  "Concordo muito": 3,
   Concordo: 2,
+  "Concordo um pouco": 1,
+  "Discordo um pouco": -1,
+  Discordo: -2,
+  "Discordo muito": -3,
+};
+
+const previousAnswerScores: Record<string, number> = {
+  "Concordo plenamente": 3,
   "Concordo parcialmente": 1,
   "Discordo parcialmente": -1,
-  Discordo: -2,
   "Discordo plenamente": -3,
 };
 
@@ -62,8 +69,11 @@ export function calculateScores(questions: Question[], answers: (Answer | null)[
   questions.forEach((question, index) => {
     const answer = answers[index];
     if (!answer) return;
+    const answerScore = scoreMap[answer] ?? previousAnswerScores[answer];
+    if (!Number.isFinite(answerScore)) return;
     (Object.keys(question.effects) as Axis[]).forEach((axis) => {
-      totals[axis] += (question.effects[axis] ?? 0) * scoreMap[answer];
+      const weight = question.effects[axis] ?? 0;
+      if (Number.isFinite(weight)) totals[axis] += weight * answerScore;
     });
   });
 
@@ -71,9 +81,13 @@ export function calculateScores(questions: Question[], answers: (Answer | null)[
 }
 
 export function getAxisPercent(axis: Axis, score: number, questions: Question[]): number {
-  const max = questions.reduce((sum, question) => sum + Math.abs(question.effects[axis] ?? 0) * 3, 0);
-  if (!max) return 50;
-  return Math.round(((score / max + 1) / 2) * 100);
+  if (!Number.isFinite(score)) return 50;
+  const max = questions.reduce((sum, question) => {
+    const weight = question.effects[axis] ?? 0;
+    return Number.isFinite(weight) ? sum + Math.abs(weight) * 3 : sum;
+  }, 0);
+  if (!Number.isFinite(max) || !max) return 50;
+  return Math.max(0, Math.min(100, Math.round(((score / max + 1) / 2) * 100)));
 }
 
 export function getPoliticalPosition(scores: Scores, questions: Question[]): string {
@@ -84,11 +98,17 @@ export function getPoliticalPosition(scores: Scores, questions: Question[]): str
 
   // A síntese usa apenas economia (Estado à esquerda) e costumes (progressista à esquerda).
   const leftRight = (normalized("economy") + normalized("customs")) / 2;
+
+  // Os eixos normalizados variam de -1 a 1; a média também fica nesse intervalo.
+  // Reservamos |leftRight| >= 0.75 para posições extremas, exigindo inclinação forte
+  // combinada em Economia e Costumes. A faixa central existente permanece estreita.
+  if (leftRight >= 0.75) return "Extrema-esquerda";
+  if (leftRight <= -0.75) return "Extrema-direita";
   if (leftRight >= 0.45) return "Esquerda";
+  if (leftRight <= -0.45) return "Direita";
   if (leftRight >= 0.15) return "Centro-esquerda";
-  if (leftRight > -0.15) return "Centro";
-  if (leftRight > -0.45) return "Centro-direita";
-  return "Direita";
+  if (leftRight <= -0.15) return "Centro-direita";
+  return "Centro";
 }
 
 export function getArchetype(scores: Scores, questions: Question[]) {

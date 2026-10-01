@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   CircleCheck,
@@ -10,6 +10,7 @@ import {
   Compass,
   Coffee,
   Copy,
+  Download,
   Dna,
   Factory,
   Feather,
@@ -17,12 +18,15 @@ import {
   Gauge,
   Handshake,
   House,
+  Image,
   KeyRound,
   Landmark,
   Leaf,
+  Link2,
   MessagesSquare,
   Scale,
   Shield,
+  Share2,
   TrendingUp,
   TreePine,
   Users,
@@ -63,29 +67,58 @@ const archetypeIcons: Record<string, LucideIcon> = {
   "Moderado Pluralista": MessagesSquare,
 };
 
+const ideologicalReferences = [
+  { id: "libertarian", label: "Libertário", x: 75, y: 20, description: "Mais autonomia individual e menos intervenção estatal." },
+  { id: "liberal", label: "Liberal", x: 70, y: 40, description: "Mais mercado e maior liberdade econômica." },
+  { id: "conservative", label: "Conservador", x: 65, y: 65, description: "Valorização de tradições, ordem e estabilidade." },
+  { id: "social-democrat", label: "Social-democrata", x: 40, y: 45, description: "Economia de mercado com forte proteção social." },
+  { id: "progressive", label: "Progressista", x: 35, y: 35, description: "Maior abertura a mudanças sociais e pautas de inclusão." },
+  { id: "nationalist", label: "Nacionalista", x: 60, y: 55, description: "Maior valorização da soberania nacional." },
+] as const;
+
 const homeProfiles = [
-  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "Fernando Henrique Cardoso", "John Maynard Keynes", "Angela Merkel"] },
-  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades.", examples: ["Lula", "Olof Palme", "Willy Brandt", "Franklin D. Roosevelt"] },
-  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal.", examples: ["Roberto Campos", "Javier Milei", "Friedrich Hayek", "Milton Friedman", "Margaret Thatcher"] },
-  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo.", examples: ["Marina Silva", "Jane Addams", "Martin Luther King Jr.", "Wangari Maathai"] },
-  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais.", examples: ["Jair Bolsonaro", "Edmund Burke", "Michael Oakeshott", "Ronald Reagan"] },
-  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado.", examples: ["John Stuart Mill", "Benjamin Constant", "Maria Lacerda de Moura", "Benjamin Tucker"] },
-  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos.", examples: ["Jair Bolsonaro", "Nayib Bukele", "James Q. Wilson", "William Bratton"] },
-  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional.", examples: ["Leonel Brizola", "Ciro Gomes", "Celso Furtado", "Juscelino Kubitschek"] },
-  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular.", examples: ["Enéas Carneiro", "Donald Trump", "Simón Bolívar", "Thomas Jefferson"] },
-  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições.", examples: ["Fernando Henrique Cardoso", "José Serra", "James Madison", "Ulysses Guimarães"] },
-  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional.", examples: ["Marina Silva", "Wangari Maathai", "Gro Harlem Brundtland", "Al Gore"] },
-  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades.", examples: ["Eduardo Suplicy", "Elinor Ostrom", "Jane Addams", "John Dewey"] },
-  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional.", examples: ["José Serra", "Mario Draghi", "Jean Monnet", "Angela Merkel"] },
-  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais.", examples: ["Jair Bolsonaro", "Konrad Adenauer", "Jacques Maritain", "Ronald Reagan"] },
-  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas.", examples: ["Tancredo Neves", "Nelson Mandela", "Václav Havel", "Angela Merkel"] },
-  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central.", examples: ["Maria Lacerda de Moura", "Benjamin Tucker", "Lysander Spooner", "Murray Rothbard"] },
+  { name: "Centro Reformista", description: "Mudanças graduais, negociação e foco em resultados.", examples: ["Tancredo Neves", "Fernando Henrique Cardoso"] },
+  { name: "Social Democrata", description: "Mercado com forte proteção social e redução de desigualdades.", examples: ["Lula", "Eduardo Suplicy"] },
+  { name: "Liberal de Mercado", description: "Economia mais livre e menor intervenção estatal.", examples: ["Roberto Campos", "Paulo Guedes"] },
+  { name: "Progressista Comunitário", description: "Inclusão social, diversidade e fortalecimento coletivo.", examples: ["Benedita da Silva", "Erika Hilton"] },
+  { name: "Conservador Tradicional", description: "Preservação de valores, costumes e instituições sociais.", examples: ["Carlos Lacerda", "Edmund Burke"] },
+  { name: "Libertário Civil", description: "Máxima autonomia individual e pouca intervenção do Estado.", examples: ["Maria Lacerda de Moura", "Hélio Beltrão"] },
+  { name: "Punitivista", description: "Segurança pública baseada em punição e policiamento rigorosos.", examples: ["Guilherme Derrite", "Wilson Witzel"] },
+  { name: "Nacional Desenvolvimentista", description: "Crescimento econômico com protagonismo nacional.", examples: ["Getúlio Vargas", "Juscelino Kubitschek"] },
+  { name: "Soberanista Popular", description: "Ênfase em soberania nacional e liderança popular.", examples: ["Enéas Carneiro", "Leonel Brizola"] },
+  { name: "Liberal Institucional", description: "Liberdades individuais com forte respeito às instituições.", examples: ["José Serra", "Ulysses Guimarães"] },
+  { name: "Ecologista Global", description: "Sustentabilidade e cooperação internacional.", examples: ["Marina Silva", "Chico Mendes"] },
+  { name: "Comunitarista Local", description: "Soluções locais e fortalecimento das comunidades.", examples: ["Luiza Erundina", "Zilda Arns"] },
+  { name: "Tecnocrata de Ordem", description: "Gestão técnica, eficiência e estabilidade institucional.", examples: ["Henrique Meirelles", "João Doria"] },
+  { name: "Social Conservador", description: "Proteção social combinada com valores tradicionais.", examples: ["Jair Bolsonaro", "Nikolas Ferreira"] },
+  { name: "Moderado Pluralista", description: "Busca equilíbrio entre diferentes correntes políticas.", examples: ["Itamar Franco", "Simone Tebet"] },
+  { name: "Anarquista Individual", description: "Máxima autonomia pessoal e rejeição à autoridade central.", examples: ["Edgard Leuenroth", "José Oiticica"] },
 ];
 
 const pixPayload = "00020126580014BR.GOV.BCB.PIX0136c39d45db-82be-4237-861e-ba554e50cdcd5204000053039865802BR5920Gustavo Guerra Sales6009SAO PAULO621405101suPsiyNgr63047223";
 
-type ShareAxis = { label: string; percent: number };
+type ShareAxis = { label: string; percent: number; low: string; high: string };
 type QuadrantCoordinates = { x: number; y: number };
+type IdeologicalIntensity = { percent: number; label: string; description: string };
+
+function getIdeologicalIntensity(axes: ShareAxis[]): IdeologicalIntensity {
+  const averageDistance = axes.reduce((sum, axis) => sum + Math.abs(axis.percent - 50), 0) / axes.length;
+  const percent = Math.round((averageDistance / 50) * 100);
+
+  if (percent <= 20) {
+    return { percent, label: "Muito moderado", description: "Suas respostas ficaram próximas do centro na maioria dos temas." };
+  }
+  if (percent <= 40) {
+    return { percent, label: "Moderado", description: "Você demonstra algumas inclinações políticas, mas mantém equilíbrio entre diferentes posições." };
+  }
+  if (percent <= 60) {
+    return { percent, label: "Posições definidas", description: "Suas respostas mostram preferências políticas consistentes em vários temas." };
+  }
+  if (percent <= 80) {
+    return { percent, label: "Convicções fortes", description: "Você tende a adotar posições claras em diversos assuntos." };
+  }
+  return { percent, label: "Perfil muito definido", description: "Suas respostas mostram inclinações fortes e consistentes em vários eixos." };
+}
 
 function getQuadrantCoordinates(percentages: Record<Axis, number>): QuadrantCoordinates {
   const economyRight = (50 - percentages.economy) / 50;
@@ -120,12 +153,61 @@ function scoresFromPercentages(percentages: Record<Axis, number>, questions: Que
   })) as Scores;
 }
 
-function createShareImage(archetypeName: string, phrase: string, compatibility: number, axes: ShareAxis[], quadrant: QuadrantCoordinates): Blob {
+function createShareImage(
+  archetypeName: string,
+  description: string,
+  position: string,
+  phrase: string,
+  compatibility: number,
+  axes: ShareAxis[],
+  ideologicalIntensity: IdeologicalIntensity,
+  closestProfiles: Array<{ name: string; compatibility: number }>,
+  quadrant: QuadrantCoordinates,
+): Blob {
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = 630;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Não foi possível gerar a imagem.");
+  const canvasContext = canvas.getContext("2d");
+  if (!canvasContext) throw new Error("Não foi possível gerar a imagem.");
+  const context: CanvasRenderingContext2D = canvasContext;
+
+  function drawWrappedText(text: string, x: number, y: number, maxWidth: number, lineHeight: number, font: string, color: string, maxLines = 2) {
+    context.font = font;
+    context.fillStyle = color;
+    context.textAlign = "left";
+    const lines: string[] = [];
+    let line = "";
+    for (const word of text.split(" ")) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > maxWidth) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) lines.push(line);
+
+    if (lines.length > maxLines) {
+      lines.length = maxLines;
+      let lastLine = lines[maxLines - 1];
+      while (lastLine.length > 1 && context.measureText(`${lastLine}…`).width > maxWidth) lastLine = lastLine.slice(0, -1);
+      lines[maxLines - 1] = `${lastLine}…`;
+    }
+
+    lines.forEach((textLine, index) => context.fillText(textLine, x, y + index * lineHeight));
+    return y + Math.max(0, lines.length - 1) * lineHeight;
+  }
+
+  function drawPanel(x: number, y: number, width: number, height: number, highlight = false) {
+    context.fillStyle = highlight ? "rgba(139,124,246,.09)" : "rgba(255,255,255,.035)";
+    context.beginPath();
+    context.roundRect(x, y, width, height, 18);
+    context.fill();
+    context.strokeStyle = highlight ? "rgba(139,124,246,.35)" : "rgba(255,255,255,.1)";
+    context.lineWidth = 1;
+    context.stroke();
+  }
 
   const background = context.createLinearGradient(0, 0, 1200, 630);
   background.addColorStop(0, "#11121e");
@@ -133,137 +215,308 @@ function createShareImage(archetypeName: string, phrase: string, compatibility: 
   background.addColorStop(1, "#102522");
   context.fillStyle = background;
   context.fillRect(0, 0, 1200, 630);
+  const ambientGlow = context.createRadialGradient(800, 250, 40, 800, 250, 520);
+  ambientGlow.addColorStop(0, "rgba(139,124,246,.12)");
+  ambientGlow.addColorStop(1, "rgba(139,124,246,0)");
+  context.fillStyle = ambientGlow;
+  context.fillRect(240, 0, 960, 540);
+
+  // Cabeçalho com a marca usada na navbar.
   context.fillStyle = "rgba(139,124,246,.12)";
-  context.beginPath();
-  context.arc(1040, 35, 260, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = "#a99cff";
-  context.font = "600 20px Arial, sans-serif";
-  context.fillText("DNA POLÍTICO", 64, 68);
-  context.fillStyle = "rgba(255,255,255,.06)";
-  context.beginPath();
-  context.roundRect(50, 88, 520, 482, 22);
-  context.fill();
-  context.beginPath();
-  context.roundRect(592, 88, 558, 482, 22);
-  context.fill();
-
-  context.fillStyle = "rgba(255,255,255,.48)";
-  context.font = "600 12px Arial, sans-serif";
-  context.fillText("MEU PERFIL POLÍTICO", 78, 123);
-  context.fillStyle = "#f7f6ff";
-  context.font = "700 34px Arial, sans-serif";
-  const words = archetypeName.split(" ");
-  let line = "";
-  let y = 166;
-  for (const word of words) {
-    const nextLine = line ? `${line} ${word}` : word;
-    if (context.measureText(nextLine).width > 460 && line) {
-      context.fillText(line, 64, y);
-      y += 40;
-      line = word;
-    } else line = nextLine;
-  }
-  if (line) context.fillText(line, 64, y);
-
-  context.fillStyle = "#bdb1ff";
-  context.font = "700 17px Arial, sans-serif";
-  context.fillText(`Compatibilidade: ${compatibility}%`, 64, y + 39);
-  context.fillStyle = "rgba(255,255,255,.8)";
-  context.font = "italic 17px Arial, sans-serif";
-  const phraseWords = `“${phrase}”`.split(" ");
-  let phraseLine = "";
-  let phraseY = y + 77;
-  for (const word of phraseWords) {
-    const nextLine = phraseLine ? `${phraseLine} ${word}` : word;
-    if (context.measureText(nextLine).width > 460 && phraseLine) {
-      context.fillText(phraseLine, 64, phraseY);
-      phraseY += 23;
-      phraseLine = word;
-    } else phraseLine = nextLine;
-  }
-  if (phraseLine) context.fillText(phraseLine, 64, phraseY);
-
-  const quadrantTitleY = Math.max(phraseY + 43, 313);
-  context.fillStyle = "rgba(255,255,255,.72)";
-  context.font = "600 12px Arial, sans-serif";
-  context.fillText("MEU POSICIONAMENTO NO QUADRANTE", 78, quadrantTitleY);
-
-  const plotSize = 185;
-  const plotLeft = 217;
-  const plotTop = quadrantTitleY + 16;
-  context.fillStyle = "rgba(255,255,255,.025)";
-  context.beginPath();
-  context.roundRect(plotLeft, plotTop, plotSize, plotSize, 12);
-  context.fill();
-  context.strokeStyle = "rgba(255,255,255,.22)";
+  context.strokeStyle = "rgba(196,181,253,.28)";
   context.lineWidth = 1;
   context.beginPath();
-  context.moveTo(plotLeft + plotSize / 2, plotTop);
-  context.lineTo(plotLeft + plotSize / 2, plotTop + plotSize);
+  context.roundRect(40, 18, 38, 38, 11);
+  context.fill();
+  context.stroke();
+  context.strokeStyle = "#b9aaff";
+  context.lineWidth = 1.7;
+  context.beginPath();
+  context.moveTo(51, 24);
+  context.bezierCurveTo(67, 28, 48, 37, 65, 42);
+  context.bezierCurveTo(69, 45, 55, 48, 60, 51);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(67, 24);
+  context.bezierCurveTo(51, 28, 70, 37, 53, 42);
+  context.bezierCurveTo(49, 45, 63, 48, 58, 51);
+  context.stroke();
+  [26, 32, 38, 45].forEach((y) => {
+    context.beginPath();
+    context.moveTo(53, y);
+    context.lineTo(65, y);
+    context.stroke();
+  });
+  context.fillStyle = "#f5f3ff";
+  context.font = "700 17px Arial, sans-serif";
+  context.textAlign = "left";
+  context.fillText("DNA POLÍTICO", 88, 43);
+
+  const cardTop = 72;
+  const cardHeight = 424;
+  const profileCard = { x: 40, width: 260 };
+  const quadrantCard = { x: 314, width: 522 };
+  const axesCard = { x: 850, width: 310 };
+  drawPanel(profileCard.x, cardTop, profileCard.width, cardHeight, true);
+  drawPanel(quadrantCard.x, cardTop, quadrantCard.width, cardHeight, true);
+  drawPanel(axesCard.x, cardTop, axesCard.width, cardHeight);
+
+  // Perfil principal e posicionamento.
+  const profileX = profileCard.x + 18;
+  const profileWidth = profileCard.width - 36;
+  context.fillStyle = "#b9aaff";
+  context.font = "600 10px Arial, sans-serif";
+  context.fillText("SEU PERFIL POLÍTICO", profileX, cardTop + 27);
+  const nameBottom = drawWrappedText(archetypeName, profileX, cardTop + 61, profileWidth, 25, "700 21px Arial, sans-serif", "#f7f6ff", 2);
+  const badgeText = position.toLocaleUpperCase("pt-BR");
+  context.font = "700 10px Arial, sans-serif";
+  const badgeWidth = Math.min(profileWidth, context.measureText(badgeText).width + 20);
+  const badgeY = nameBottom + 11;
+  context.fillStyle = "rgba(139,124,246,.22)";
+  context.beginPath();
+  context.roundRect(profileX, badgeY, badgeWidth, 21, 11);
+  context.fill();
+  context.fillStyle = "#d5ceff";
+  context.fillText(badgeText, profileX + 10, badgeY + 14);
+
+  const intensityTop = badgeY + 29;
+  context.fillStyle = "rgba(94,234,212,.055)";
+  context.strokeStyle = "rgba(94,234,212,.2)";
+  context.beginPath();
+  context.roundRect(profileX, intensityTop, profileWidth, 64, 10);
+  context.fill();
+  context.stroke();
+  context.textAlign = "left";
+  context.fillStyle = "#9cefe2";
+  context.font = "700 7px Arial, sans-serif";
+  context.fillText("INTENSIDADE IDEOLÓGICA", profileX + 9, intensityTop + 12);
+  context.textAlign = "right";
+  context.fillStyle = "#86e6d5";
+  context.font = "700 12px Arial, sans-serif";
+  context.fillText(`${ideologicalIntensity.percent}%`, profileX + profileWidth - 9, intensityTop + 13);
+  context.fillStyle = "rgba(255,255,255,.13)";
+  context.beginPath();
+  context.roundRect(profileX + 9, intensityTop + 19, profileWidth - 18, 4, 2);
+  context.fill();
+  const intensityGradient = context.createLinearGradient(profileX + 9, 0, profileX + profileWidth - 9, 0);
+  intensityGradient.addColorStop(0, "#8b7cf6");
+  intensityGradient.addColorStop(1, "#42d6bf");
+  context.fillStyle = intensityGradient;
+  context.beginPath();
+  context.roundRect(profileX + 9, intensityTop + 19, (profileWidth - 18) * ideologicalIntensity.percent / 100, 4, 2);
+  context.fill();
+  context.textAlign = "left";
+  context.fillStyle = "#f7f6ff";
+  context.font = "700 9px Arial, sans-serif";
+  context.fillText(ideologicalIntensity.label, profileX + 9, intensityTop + 35);
+  drawWrappedText(ideologicalIntensity.description, profileX + 9, intensityTop + 47, profileWidth - 18, 9, "7px Arial, sans-serif", "rgba(255,255,255,.62)", 2);
+
+  const descriptionBottom = drawWrappedText(description, profileX, intensityTop + 73, profileWidth, 14, "12px Arial, sans-serif", "rgba(255,255,255,.76)", 2);
+  const phraseBottom = drawWrappedText(`“${phrase}”`, profileX, descriptionBottom + 14, profileWidth, 14, "italic 11px Arial, sans-serif", "#bdf5ec", 2);
+
+  const compatibilityTop = phraseBottom + 14;
+  const circle = { x: profileX + 39, y: compatibilityTop + 37, radius: 34 };
+  context.save();
+  context.lineWidth = 5;
+  context.strokeStyle = "rgba(94,234,212,.18)";
+  context.beginPath();
+  context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+  context.stroke();
+  context.strokeStyle = "#6ee7d0";
+  context.shadowColor = "rgba(94,234,212,.7)";
+  context.shadowBlur = 12;
+  context.lineCap = "round";
+  context.beginPath();
+  context.arc(circle.x, circle.y, circle.radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * compatibility / 100);
+  context.stroke();
+  context.restore();
+  context.fillStyle = "#86e6d5";
+  context.font = "700 20px Arial, sans-serif";
+  context.textAlign = "center";
+  context.fillText(`${compatibility}%`, circle.x, circle.y + 7);
+  context.fillStyle = "rgba(255,255,255,.5)";
+  context.font = "600 7px Arial, sans-serif";
+  context.fillText("COMPATIBILIDADE", circle.x, circle.y + circle.radius + 14);
+  drawWrappedText(`Suas respostas se alinham em ${compatibility}% com este perfil.`, profileX + 86, compatibilityTop + 31, profileWidth - 86, 13, "10px Arial, sans-serif", "rgba(255,255,255,.68)", 4);
+
+  const positionCardY = cardTop + cardHeight - 75;
+  context.fillStyle = "rgba(255,255,255,.035)";
+  context.strokeStyle = "rgba(255,255,255,.1)";
+  context.beginPath();
+  context.roundRect(profileX, positionCardY, profileWidth, 59, 12);
+  context.fill();
+  context.stroke();
+  context.textAlign = "left";
+  context.fillStyle = "#b9aaff";
+  context.font = "600 8px Arial, sans-serif";
+  context.fillText("POSICIONAMENTO GERAL", profileX + 10, positionCardY + 14);
+  context.fillStyle = "#f7f6ff";
+  context.font = "700 13px Arial, sans-serif";
+  context.fillText(position, profileX + 10, positionCardY + 32);
+  context.fillStyle = "rgba(255,255,255,.55)";
+  context.font = "9px Arial, sans-serif";
+  context.fillText("Baseado principalmente em Economia e Costumes.", profileX + 10, positionCardY + 48);
+
+  // Quadrante central, ampliado em 25% em relação ao template anterior.
+  const quadrantTitleX = quadrantCard.x + 20;
+  const quadrantCenterX = quadrantCard.x + quadrantCard.width / 2;
+  context.fillStyle = "#f7f6ff";
+  context.font = "700 14px Arial, sans-serif";
+  context.textAlign = "left";
+  context.fillText("SEU POSICIONAMENTO NO QUADRANTE", quadrantTitleX, cardTop + 27);
+  context.fillStyle = "rgba(255,255,255,.62)";
+  context.font = "10px Arial, sans-serif";
+  context.fillText("Seu posicionamento aproximado no espectro político.", quadrantTitleX, cardTop + 45);
+
+  context.textAlign = "center";
+  context.fillStyle = "#f5f3ff";
+  context.font = "600 12px Arial, sans-serif";
+  context.fillText("↑ Libertário", quadrantCenterX, cardTop + 69);
+  context.fillStyle = "rgba(255,255,255,.58)";
+  context.font = "9px Arial, sans-serif";
+  context.fillText("Mais liberdade individual", quadrantCenterX, cardTop + 82);
+
+  const plotSize = 300;
+  const plotLeft = quadrantCenterX - plotSize / 2;
+  const plotTop = cardTop + 87;
+  const plotGradient = context.createLinearGradient(plotLeft, plotTop, plotLeft + plotSize, plotTop + plotSize);
+  plotGradient.addColorStop(0, "rgba(139,124,246,.09)");
+  plotGradient.addColorStop(.52, "rgba(255,255,255,.025)");
+  plotGradient.addColorStop(1, "rgba(66,214,191,.075)");
+  context.fillStyle = plotGradient;
+  context.beginPath();
+  context.roundRect(plotLeft, plotTop, plotSize, plotSize, 15);
+  context.fill();
+  context.strokeStyle = "rgba(196,181,253,.24)";
+  context.lineWidth = 1;
+  context.stroke();
+  context.strokeStyle = "rgba(255,255,255,.24)";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(quadrantCenterX, plotTop);
+  context.lineTo(quadrantCenterX, plotTop + plotSize);
   context.moveTo(plotLeft, plotTop + plotSize / 2);
   context.lineTo(plotLeft + plotSize, plotTop + plotSize / 2);
   context.stroke();
 
-  context.fillStyle = "rgba(255,255,255,.65)";
-  context.font = "12px Arial, sans-serif";
-  context.textAlign = "center";
-  context.fillText("Libertário", plotLeft + plotSize / 2, plotTop - 5);
-  context.fillText("Autoritário", plotLeft + plotSize / 2, plotTop + plotSize + 17);
-  context.textAlign = "right";
-  context.fillText("Esquerda", plotLeft - 10, plotTop + plotSize / 2 + 4);
+  const labelY = plotTop + plotSize / 2 - 18;
+  const leftLabelX = plotLeft - 80;
+  const rightLabelX = plotLeft + plotSize + 10;
+  context.fillStyle = "rgba(12,15,25,.78)";
+  context.beginPath();
+  context.roundRect(leftLabelX, labelY, 70, 38, 7);
+  context.roundRect(rightLabelX, labelY, 70, 38, 7);
+  context.fill();
+  context.fillStyle = "#f7f6ff";
+  context.font = "600 10px Arial, sans-serif";
   context.textAlign = "left";
-  context.fillText("Direita", plotLeft + plotSize + 10, plotTop + plotSize / 2 + 4);
+  context.fillText("← Esquerda", leftLabelX + 5, plotTop + plotSize / 2 - 3);
+  context.fillText("Mais Estado", leftLabelX + 5, plotTop + plotSize / 2 + 11);
+  context.textAlign = "right";
+  context.fillText("Direita →", rightLabelX + 65, plotTop + plotSize / 2 - 3);
+  context.fillText("Mais mercado", rightLabelX + 65, plotTop + plotSize / 2 + 11);
 
   const dotX = plotLeft + (quadrant.x / 100) * plotSize;
   const dotY = plotTop + (quadrant.y / 100) * plotSize;
+  context.save();
   context.fillStyle = "rgba(66,214,191,.25)";
+  context.shadowColor = "rgba(94,234,212,.85)";
+  context.shadowBlur = 24;
   context.beginPath();
-  context.arc(dotX, dotY, 16, 0, Math.PI * 2);
+  context.arc(dotX, dotY, 13, 0, Math.PI * 2);
   context.fill();
+  context.shadowBlur = 0;
   context.fillStyle = "#86e6d5";
   context.strokeStyle = "#11121e";
   context.lineWidth = 3;
   context.beginPath();
-  context.arc(dotX, dotY, 8, 0, Math.PI * 2);
+  context.arc(dotX, dotY, 7, 0, Math.PI * 2);
   context.fill();
   context.stroke();
+  context.restore();
 
-  context.textAlign = "left";
-  context.fillStyle = "rgba(255,255,255,.48)";
+  context.textAlign = "center";
+  context.fillStyle = "#f5f3ff";
   context.font = "600 12px Arial, sans-serif";
-  context.fillText("SEUS SEIS EIXOS", 624, 123);
-  context.fillStyle = "rgba(255,255,255,.42)";
-  context.font = "12px Arial, sans-serif";
-  context.fillText("Um retrato das suas prioridades", 624, 144);
+  context.fillText("↓ Autoritário", quadrantCenterX, plotTop + plotSize + 18);
+  context.fillStyle = "rgba(255,255,255,.58)";
+  context.font = "9px Arial, sans-serif";
+  context.fillText("Mais controle e regras", quadrantCenterX, plotTop + plotSize + 31);
+
+  // Eixos com rótulos e barras condensados no mesmo estilo visual da página.
+  const axesX = axesCard.x + 17;
+  const axesWidth = axesCard.width - 34;
+  context.textAlign = "left";
+  context.fillStyle = "#f7f6ff";
+  context.font = "700 13px Arial, sans-serif";
+  context.fillText("SEUS SEIS EIXOS", axesX, cardTop + 27);
+  drawWrappedText("50% indica equilíbrio. Quanto mais próximo das extremidades, maior a inclinação.", axesX, cardTop + 45, axesWidth, 12, "9px Arial, sans-serif", "rgba(255,255,255,.58)", 2);
   axes.forEach((axis, index) => {
-    const rowY = 180 + index * 61;
-    context.fillStyle = "#f7f6ff";
-    context.font = "600 16px Arial, sans-serif";
-    context.fillText(axis.label, 624, rowY);
-    context.fillStyle = "#86e6d5";
-    context.font = "700 15px Arial, sans-serif";
-    context.textAlign = "right";
-    context.fillText(`${axis.percent}%`, 1118, rowY);
+    const rowY = cardTop + 89 + index * 52;
     context.textAlign = "left";
-    context.fillStyle = "rgba(255,255,255,.12)";
+    context.fillStyle = "#f7f6ff";
+    context.font = "600 12px Arial, sans-serif";
+    context.fillText(axis.label, axesX, rowY);
+    context.textAlign = "right";
+    context.fillStyle = "#86e6d5";
+    context.font = "700 12px Arial, sans-serif";
+    context.fillText(`${axis.percent}%`, axesX + axesWidth, rowY);
+    context.fillStyle = "rgba(255,255,255,.13)";
     context.beginPath();
-    context.roundRect(624, rowY + 11, 494, 7, 4);
+    context.roundRect(axesX, rowY + 8, axesWidth, 5, 3);
     context.fill();
-    const bar = context.createLinearGradient(624, 0, 1118, 0);
+    const bar = context.createLinearGradient(axesX, 0, axesX + axesWidth, 0);
     bar.addColorStop(0, "#8b7cf6");
     bar.addColorStop(1, "#42d6bf");
     context.fillStyle = bar;
     context.beginPath();
-    context.roundRect(624, rowY + 11, (494 * axis.percent) / 100, 7, 4);
+    context.roundRect(axesX, rowY + 8, (axesWidth * axis.percent) / 100, 5, 3);
     context.fill();
+    context.textAlign = "left";
+    context.fillStyle = "rgba(255,255,255,.5)";
+    context.font = "8px Arial, sans-serif";
+    context.fillText(axis.low, axesX, rowY + 25);
+    context.textAlign = "right";
+    context.fillText(axis.high, axesX + axesWidth, rowY + 25);
   });
-  context.fillStyle = "rgba(255,255,255,.45)";
-  context.font = "13px Arial, sans-serif";
-  context.fillText("Descubra o seu em:", 64, 610);
+
+  // Perfis semelhantes em uma faixa enxuta abaixo das três colunas.
+  context.textAlign = "left";
+  context.fillStyle = "#b9aaff";
+  context.font = "600 9px Arial, sans-serif";
+  context.fillText("PERFIS MAIS PRÓXIMOS", 40, 518);
+  const nearbyGap = 12;
+  const nearbyWidth = (1120 - nearbyGap * 2) / 3;
+  closestProfiles.forEach((profile, index) => {
+    const x = 40 + index * (nearbyWidth + nearbyGap);
+    context.fillStyle = "rgba(255,255,255,.04)";
+    context.strokeStyle = "rgba(255,255,255,.1)";
+    context.beginPath();
+    context.roundRect(x, 526, nearbyWidth, 36, 10);
+    context.fill();
+    context.stroke();
+    context.fillStyle = "#f5f3ff";
+    context.font = "600 11px Arial, sans-serif";
+    context.textAlign = "left";
+    context.fillText(profile.name, x + 12, 548, nearbyWidth - 78);
+    context.fillStyle = "#86e6d5";
+    context.font = "700 11px Arial, sans-serif";
+    context.textAlign = "right";
+    context.fillText(`${profile.compatibility}%`, x + nearbyWidth - 12, 548);
+  });
+
+  context.fillStyle = "rgba(139,124,246,.11)";
+  context.beginPath();
+  context.roundRect(40, 580, 1120, 24, 9);
+  context.fill();
+  context.textAlign = "left";
+  context.fillStyle = "#ddd6ff";
+  context.font = "600 11px Arial, sans-serif";
+  context.fillText("Descubra o seu perfil em:", 54, 596);
   context.textAlign = "right";
-  context.fillText("dnapolitico.vercel.app", 1136, 610);
+  context.fillStyle = "#86e6d5";
+  context.font = "700 11px Arial, sans-serif";
+  context.fillText("dnapolitico.vercel.app", 1146, 596);
   context.textAlign = "left";
   const data = canvas.toDataURL("image/png").split(",")[1];
   if (!data) throw new Error("Não foi possível gerar a imagem.");
@@ -283,9 +536,11 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const [isSharedRouteReady, setIsSharedRouteReady] = useState(!sharedRoute);
   const [invalidSharedLink, setInvalidSharedLink] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
+  const shareMessageTimeout = useRef<number | null>(null);
   const [pixMessage, setPixMessage] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("light");
+  const [showIdeologicalReferences, setShowIdeologicalReferences] = useState(true);
 
   useEffect(() => {
     let savedTheme: string | null = null;
@@ -316,6 +571,25 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   useEffect(() => {
     if (stage === "result") window.scrollTo(0, 0);
   }, [stage]);
+
+  useEffect(() => () => {
+    if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
+  }, []);
+
+  function clearShareMessage() {
+    if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
+    shareMessageTimeout.current = null;
+    setShareMessage("");
+  }
+
+  function showShareMessage(message: string) {
+    if (shareMessageTimeout.current !== null) window.clearTimeout(shareMessageTimeout.current);
+    setShareMessage(message);
+    shareMessageTimeout.current = window.setTimeout(() => {
+      setShareMessage("");
+      shareMessageTimeout.current = null;
+    }, 7000);
+  }
 
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -383,7 +657,9 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   const ProfileIcon = archetypeIcons[archetype.name] ?? Dna;
   const axisPercentages = sharedPercentages ?? Object.fromEntries(axisInfo.map((axis) => [axis.key, getAxisPercent(axis.key, scores[axis.key], quizQuestions)])) as Record<Axis, number>;
   const quadrantCoordinates = getQuadrantCoordinates(axisPercentages);
-  const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: axisPercentages[axis.key] }));
+  const shareAxes = axisInfo.map((axis) => ({ label: axis.label, percent: axisPercentages[axis.key], low: axis.low, high: axis.high }));
+  const ideologicalIntensity = getIdeologicalIntensity(shareAxes);
+  const shareClosestProfiles = closestProfiles.map(({ archetype: profile, compatibility }) => ({ name: profile.name, compatibility }));
   const sharedUrl = typeof window !== "undefined"
     ? `${window.location.origin}/r?s=${axisInfo.map((axis) => axisPercentages[axis.key]).join(",")}`
     : `https://dnapolitico.vercel.app/r?s=${axisInfo.map((axis) => axisPercentages[axis.key]).join(",")}`;
@@ -392,9 +668,9 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   async function copyResult() {
     try {
       await navigator.clipboard.writeText(shareText);
-      setShareMessage("Resultado copiado!");
+      showShareMessage("Resultado copiado!");
     } catch {
-      setShareMessage("Não foi possível copiar automaticamente neste navegador.");
+      showShareMessage("Não foi possível copiar automaticamente neste navegador.");
     }
   }
 
@@ -410,26 +686,26 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   async function copyResultLink() {
     try {
       await navigator.clipboard.writeText(sharedUrl);
-      setShareMessage("Link com seu resultado copiado!");
+      showShareMessage("Link com seu resultado copiado!");
     } catch {
-      setShareMessage("Não foi possível copiar o link neste navegador.");
+      showShareMessage("Não foi possível copiar o link neste navegador.");
     }
   }
 
   async function downloadResultImage() {
     setIsGeneratingImage(true);
-    setShareMessage("");
+    clearShareMessage();
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, primaryCompatibility, shareAxes, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = "meu-dna-politico.png";
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setShareMessage("Imagem PNG baixada!");
+      showShareMessage("Imagem PNG baixada!");
     } catch {
-      setShareMessage("Não foi possível gerar a imagem neste navegador.");
+      showShareMessage("Não foi possível gerar a imagem neste navegador.");
     } finally {
       setIsGeneratingImage(false);
     }
@@ -437,16 +713,16 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
 
   async function copyResultImage() {
     if (typeof ClipboardItem === "undefined" || typeof navigator.clipboard?.write !== "function") {
-      setShareMessage("Este navegador não oferece suporte para copiar imagens. Use “Baixar imagem PNG”.");
+      showShareMessage("Este navegador não oferece suporte para copiar imagens. Use “Baixar imagem PNG”.");
       return;
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, primaryCompatibility, shareAxes, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setShareMessage("Imagem copiada para a área de transferência.");
+      showShareMessage("Imagem copiada para a área de transferência.");
     } catch {
-      setShareMessage("Este navegador ou suas permissões não permitem copiar imagens. Use “Baixar imagem PNG”.");
+      showShareMessage("Este navegador ou suas permissões não permitem copiar imagens. Use “Baixar imagem PNG”.");
     }
   }
 
@@ -458,12 +734,12 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     const shareNavigator = navigator as ShareNavigator;
     if (!shareNavigator.share) {
       await copyResult();
-      setShareMessage("Compartilhamento não disponível. Resultado copiado!");
+      showShareMessage("Compartilhamento não disponível. Resultado copiado!");
       return;
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.phrase, primaryCompatibility, shareAxes, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
       const url = sharedUrl;
       if (shareNavigator.canShare?.({ files: [file] })) {
@@ -471,10 +747,10 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
       } else {
         await shareNavigator.share({ title: "Meu resultado no DNA Político", text: shareText, url });
       }
-      setShareMessage("Compartilhamento iniciado!");
+      showShareMessage("Compartilhamento iniciado!");
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
-      setShareMessage("Não foi possível compartilhar neste navegador.");
+      showShareMessage("Não foi possível compartilhar neste navegador.");
     }
   }
 
@@ -483,8 +759,8 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
   }
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 sm:py-12">
-      <div className={`mx-auto flex min-h-[calc(100vh-4rem)] w-full ${stage === "result" ? "max-w-6xl" : "max-w-5xl"} flex-col`}>
+    <main className={`min-h-screen px-5 sm:px-8 ${stage === "result" ? "py-4" : "py-8 sm:py-12"}`}>
+      <div className={`mx-auto flex ${stage === "result" ? "min-h-[calc(100vh-2rem)]" : "min-h-[calc(100vh-4rem)]"} w-full ${stage === "result" ? "max-w-6xl" : "max-w-5xl"} flex-col`}>
         <header className="flex items-center justify-between">
           <button onClick={() => stage === "quiz" ? setStage("home") : restart()} className="flex items-center gap-2.5 text-sm font-semibold tracking-wide text-white/90" aria-label={stage === "quiz" ? "Voltar ao início sem apagar respostas" : "Voltar ao início"}>
             <span className="theme-brand-mark grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.06] text-violet-300"><Dna aria-hidden="true" className="h-5 w-5" /></span>
@@ -543,50 +819,21 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                 {homeProfiles.map((profile) => {
                   const ProfileIcon = archetypeIcons[profile.name];
                   return (
-                    <article key={profile.name} className="theme-panel rounded-xl border border-white/[0.08] bg-white/[0.025] p-5">
-                      <span aria-hidden="true" className="mb-4 grid h-10 w-10 place-items-center rounded-xl border border-violet-300/20 bg-violet-300/[0.08] text-violet-300">
+                    <article key={profile.name} className="theme-panel flex flex-col rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
+                      <span aria-hidden="true" className="mb-3 grid h-9 w-9 place-items-center rounded-lg border border-violet-300/20 bg-violet-300/[0.08] text-violet-300">
                         <ProfileIcon className="h-5 w-5" strokeWidth={1.8} />
                       </span>
                       <h3 className="text-sm font-semibold leading-5">{profile.name}</h3>
-                      <p className="mt-2 text-sm leading-5 text-white/55">{profile.description}</p>
+                      <p className="mt-1.5 text-xs leading-4 text-white/55">{profile.description}</p>
+                      <div className="mt-auto pt-3">
+                        <p className="text-[9px] font-semibold uppercase tracking-wide text-white/40">Exemplos frequentemente associados</p>
+                        <p className="home-profile-examples mt-0.5 line-clamp-2 text-[10px] leading-4 text-violet-200/80" title={profile.examples.slice(0, 2).join(" • ")}>{profile.examples.slice(0, 2).join(" • ")}</p>
+                      </div>
                     </article>
                   );
                 })}
               </div>
-              <p className="mt-6 rounded-xl border border-violet-300/15 bg-violet-300/[0.05] px-5 py-4 text-center text-sm leading-6 text-white/65">Não existem respostas certas ou erradas. Os perfis representam combinações diferentes de valores e prioridades.</p>
-            </section>
-            <section className="mb-10" aria-labelledby="historical-profiles-title">
-              <header className="mx-auto mb-8 max-w-3xl text-center">
-                <h2 id="historical-profiles-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Perfis e exemplos históricos</h2>
-                <p className="mt-3 text-sm leading-6 text-white/55 sm:text-base">Figuras frequentemente associadas a ideias semelhantes, como exemplos aproximados — não classificações definitivas.</p>
-              </header>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {homeProfiles.map((profile) => {
-                  const ProfileIcon = archetypeIcons[profile.name];
-                  return (
-                    <details key={profile.name} className="historical-profile theme-panel rounded-xl border border-white/[0.08] bg-white/[0.025] p-5">
-                      <summary className="flex cursor-pointer list-none items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300">
-                        <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-violet-300/20 bg-violet-300/[0.08] text-violet-300">
-                          <ProfileIcon className="h-5 w-5" strokeWidth={1.8} />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold leading-5">{profile.name}</span>
-                          <span className="mt-2 block text-sm leading-5 text-white/55">{profile.description}</span>
-                          <span className="mt-3 block text-xs font-medium text-violet-300">Ver exemplos aproximados</span>
-                        </span>
-                        <ChevronDown aria-hidden="true" className="historical-chevron mt-1 h-4 w-4 shrink-0 text-white/45 transition-transform" />
-                      </summary>
-                      <div className="mt-4 border-t border-white/[0.08] pt-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-white/45">Figuras frequentemente associadas</p>
-                        <ul className="mt-2 space-y-1.5 text-sm leading-5 text-white/75">
-                          {profile.examples.map((example) => <li key={example}>{example}</li>)}
-                        </ul>
-                      </div>
-                    </details>
-                  );
-                })}
-              </div>
-              <p className="mt-6 rounded-xl border border-violet-300/15 bg-violet-300/[0.05] px-5 py-4 text-center text-sm leading-6 text-white/65">Os exemplos abaixo são apenas aproximações ilustrativas. Pessoas reais raramente correspondem perfeitamente a um único perfil.</p>
+              <p className="mt-5 text-center text-xs leading-5 text-white/45">Não existem respostas certas ou erradas. Os exemplos são aproximações ilustrativas; pessoas reais raramente correspondem perfeitamente a um único perfil político.</p>
             </section>
             <div className="mb-12 flex justify-center">
               <button onClick={continueQuiz} className="inline-flex items-center gap-3 rounded-xl border border-violet-300/30 bg-violet-300/[0.08] px-5 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-300/[0.14] focus:outline-none focus:ring-2 focus:ring-violet-300">Começar questionário <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></button>
@@ -614,66 +861,144 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
         )}
 
         {stage === "result" && (
-          <section className="my-auto grid w-full items-stretch gap-4 self-center py-4 md:grid-cols-2 xl:grid-cols-[.9fr_1.15fr_.95fr] sm:py-6">
-            <div className="theme-archetype-card relative flex flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.2] via-[#11131f] to-teal-400/[0.08] p-4 shadow-[0_24px_90px_rgba(113,91,230,.12)] sm:p-5">
+          <section className="grid w-full items-stretch gap-3 self-center py-3 md:grid-cols-2 xl:grid-cols-[.78fr_1.4fr_.93fr]">
+            <div className="theme-archetype-card relative flex flex-col overflow-hidden rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.2] via-[#11131f] to-teal-400/[0.08] p-4 shadow-[0_24px_90px_rgba(113,91,230,.12)]">
               <ProfileIcon aria-hidden="true" className="absolute -right-8 -top-10 h-36 w-36 text-violet-300 opacity-[0.07]" strokeWidth={1.2} />
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-violet-300">Seu perfil político</p>
-              <div className="mt-3 flex items-center gap-3">
-                <span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-violet-200/20 bg-violet-300/10 shadow-[0_0_32px_rgba(167,139,250,.18)]"><ProfileIcon className="h-7 w-7 text-violet-200" strokeWidth={1.7} /></span>
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">{archetype.name}</h1>
-                  <p className="mt-1 text-xs font-semibold tabular-nums text-teal-200">Compatibilidade: {primaryCompatibility}%</p>
+              <div className="mt-2 flex items-center gap-2.5">
+                <span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-violet-200/20 bg-violet-300/10 shadow-[0_0_32px_rgba(167,139,250,.18)]"><ProfileIcon className="h-6 w-6 text-violet-200" strokeWidth={1.7} /></span>
+                <h1 className="min-w-0 text-xl font-semibold leading-tight tracking-[-0.03em] sm:text-2xl">{archetype.name}</h1>
+              </div>
+              <span className="mt-2 inline-flex w-fit items-center rounded-full border border-violet-300/30 bg-violet-300/[0.12] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.08em] text-violet-200">{politicalPosition}</span>
+              <div className="mt-2 rounded-xl border border-teal-200/20 bg-teal-200/[0.06] px-3 py-2 shadow-[0_0_22px_rgba(94,234,212,.08)]" aria-label={`Intensidade ideológica: ${ideologicalIntensity.percent}%, ${ideologicalIntensity.label}. ${ideologicalIntensity.description}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-[9px] font-bold uppercase tracking-[.1em] text-teal-200">Intensidade ideológica</h2>
+                  <span className="text-sm font-bold tabular-nums text-teal-200">{ideologicalIntensity.percent}%</span>
                 </div>
+                <div className="theme-progress-track mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.1]" aria-hidden="true">
+                  <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${ideologicalIntensity.percent}%` }} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold text-white/85">{ideologicalIntensity.label}</p>
+                <p className="text-[9px] leading-3 text-white/55">{ideologicalIntensity.description}</p>
               </div>
-              <p className="mt-3 text-sm leading-5 text-white/65">{archetype.description}</p>
-              <blockquote className="theme-quote mt-3 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2.5 text-xs leading-5 text-teal-100/90">“{archetype.phrase}”</blockquote>
-              <div className="mt-3 rounded-xl border border-violet-300/15 bg-violet-300/[0.06] px-3 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-violet-200/65">Posicionamento Geral</p>
-                <p className="mt-0.5 text-lg font-semibold text-white">{politicalPosition}</p>
-                <p className="text-[11px] leading-4 text-white/50">Baseado em Economia e Costumes.</p>
+              <p className="mt-2 text-xs leading-4 text-white/65">{archetype.description}</p>
+              <blockquote className="theme-quote mt-2 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2 text-[11px] leading-4 text-teal-100/90">“{archetype.phrase}”</blockquote>
+              <div className="mt-3 flex items-center gap-3 text-teal-200" role="img" aria-label={`Compatibilidade: ${primaryCompatibility}%. Suas respostas se alinham em ${primaryCompatibility}% com este perfil.`}>
+                <div className="relative grid h-24 w-24 shrink-0 place-items-center">
+                  <svg aria-hidden="true" viewBox="0 0 120 120" className="absolute inset-0 h-full w-full -rotate-90">
+                    <circle cx="60" cy="60" r="53" fill="none" stroke="currentColor" strokeWidth="5" opacity=".16" />
+                    <circle cx="60" cy="60" r="53" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeDasharray={2 * Math.PI * 53} strokeDashoffset={(2 * Math.PI * 53 * (100 - primaryCompatibility)) / 100} className="drop-shadow-[0_0_5px_rgba(45,212,191,.5)]" />
+                  </svg>
+                  <span className="text-center text-2xl font-bold leading-none tabular-nums">{primaryCompatibility}%</span>
+                </div>
+                <p className="text-[10px] leading-4 text-white/65">Suas respostas se alinham em <strong className="font-semibold text-teal-200">{primaryCompatibility}%</strong> com este perfil.</p>
               </div>
-              <p className="mt-3 text-[10px] leading-4 text-white/40">Um retrato simplificado das suas respostas — não um rótulo definitivo.</p>
-              <button onClick={restart} className="mt-auto self-start pt-3 inline-flex items-center gap-1 text-xs font-medium text-violet-200 transition hover:text-white">Refazer questionário <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></button>
+              <div className="mt-2 rounded-xl border border-white/[0.08] bg-white/[0.025] px-3 py-2">
+                <p className="text-[9px] font-semibold uppercase tracking-[.14em] text-violet-200/65">Posicionamento geral</p>
+                <p className="mt-0.5 text-sm font-semibold">{politicalPosition}</p>
+                <p className="text-[10px] leading-4 text-white/45">Baseado em Economia e Costumes.</p>
+              </div>
+              <div className="mt-3 border-t border-white/[0.1] pt-2.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h2 id="closest-profiles-title" className="text-xs font-semibold">Perfis mais próximos</h2>
+                  <span className="text-[9px] text-white/40">ideias semelhantes</span>
+                </div>
+                <ol className="mt-2 space-y-2">
+                  {closestProfiles.map(({ archetype: profile, compatibility }) => {
+                    const NearbyIcon = archetypeIcons[profile.name] ?? Dna;
+                    return (
+                      <li key={profile.name}>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <NearbyIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-violet-300" strokeWidth={1.8} />
+                          <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-white/75">{profile.name}</span>
+                          <span className="shrink-0 text-[10px] font-semibold tabular-nums text-teal-200">{compatibility}%</span>
+                        </div>
+                        <div className="theme-progress-track mt-1 h-1 overflow-hidden rounded-full bg-white/[0.08]" aria-hidden="true">
+                          <div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${compatibility}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+              <button onClick={restart} className="mt-auto self-start pt-3 inline-flex items-center gap-1 text-[11px] font-medium text-violet-200 transition hover:text-white">Refazer questionário <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></button>
             </div>
 
-            <section className="theme-quadrant-card rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.025] to-teal-400/[0.08] p-4 shadow-[0_20px_70px_rgba(91,75,210,.12)] sm:p-5" aria-labelledby="quadrant-title">
+            <section className="theme-quadrant-card flex flex-col rounded-2xl border border-violet-300/25 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.025] to-teal-400/[0.08] p-3 shadow-[0_20px_70px_rgba(91,75,210,.12)] sm:p-4" aria-labelledby="quadrant-title">
               <div className="text-center">
-                <h2 id="quadrant-title" className="text-lg font-semibold">Seu posicionamento no quadrante</h2>
-                <p className="mt-1 text-xs leading-5 text-white/50">Uma visualização complementar baseada nos seis eixos.</p>
+                <h2 id="quadrant-title" className="text-lg font-semibold sm:text-xl">Seu posicionamento no quadrante</h2>
+                <p className="mt-0.5 text-[11px] leading-4 text-white/60">Seu posicionamento aproximado no espectro político.</p>
               </div>
-              <p className="mt-4 text-center text-xs font-semibold text-white/75">↑ Libertário</p>
-              <div
-                role="img"
-                aria-label={`Posição aproximada: ${quadrantCoordinates.x < 49 ? "esquerda" : quadrantCoordinates.x > 51 ? "direita" : "centro horizontal"} e ${quadrantCoordinates.y < 49 ? "libertária" : quadrantCoordinates.y > 51 ? "autoritária" : "centro vertical"}.`}
-                className="quadrant-surface relative mx-auto mt-2 aspect-square w-full max-w-[22rem] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] shadow-inner"
-              >
-                <span aria-hidden="true" className="quadrant-grid-line absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2" />
-                <span aria-hidden="true" className="quadrant-grid-line absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" />
-                <span aria-hidden="true" className="quadrant-label absolute left-2 top-1/2 -translate-y-1/2 rounded-md px-1.5 py-1 text-[10px] font-semibold sm:text-xs">← Esquerda</span>
-                <span aria-hidden="true" className="quadrant-label absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-1.5 py-1 text-[10px] font-semibold sm:text-xs">Direita →</span>
-                <span
-                  aria-hidden="true"
-                  className="quadrant-dot absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-950 bg-teal-300 shadow-[0_0_0_7px_rgba(94,234,212,.2),0_0_26px_rgba(94,234,212,.8)]"
-                  style={{ left: `${quadrantCoordinates.x}%`, top: `${quadrantCoordinates.y}%` }}
+              <label className="mt-2 inline-flex w-fit cursor-pointer items-center gap-2 self-center text-[10px] font-medium text-white/65">
+                <input
+                  type="checkbox"
+                  checked={showIdeologicalReferences}
+                  onChange={(event) => setShowIdeologicalReferences(event.target.checked)}
+                  className="h-3.5 w-3.5 accent-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 />
+                Mostrar referências ideológicas
+              </label>
+              <div className="flex flex-1 flex-col justify-center">
+                <p className="mt-2 text-center text-sm font-semibold text-white/85">↑ Libertário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais liberdade individual</span></p>
+                <div className="mt-1 grid w-full grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-1.5 sm:grid-cols-[4rem_minmax(0,1fr)_4rem] sm:gap-2">
+                  <span aria-hidden="true" className="quadrant-label flex flex-col items-start rounded-md px-1 py-1 text-[9px] font-semibold leading-3 sm:text-[10px]">← Esquerda<span className="text-[8px] font-normal opacity-75 sm:text-[9px]">Mais Estado</span></span>
+                  <div
+                    role="img"
+                    aria-label={`Posição aproximada: ${quadrantCoordinates.x < 49 ? "esquerda" : quadrantCoordinates.x > 51 ? "direita" : "centro horizontal"} e ${quadrantCoordinates.y < 49 ? "libertária" : quadrantCoordinates.y > 51 ? "autoritária" : "centro vertical"}.`}
+                    className="quadrant-surface relative mx-auto aspect-square w-full max-w-[20rem] rounded-2xl border border-white/15 bg-white/[0.035] shadow-[inset_0_0_40px_rgba(139,124,246,.07),0_12px_35px_rgba(16,185,129,.05)]"
+                  >
+                    <span aria-hidden="true" className="quadrant-grid-line absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2" />
+                    <span aria-hidden="true" className="quadrant-grid-line absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" />
+                    <span
+                      aria-hidden="true"
+                      className="quadrant-dot absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-slate-950 bg-teal-300 shadow-[0_0_0_8px_rgba(94,234,212,.22),0_0_32px_rgba(94,234,212,.9)]"
+                      style={{ left: `${quadrantCoordinates.x}%`, top: `${quadrantCoordinates.y}%` }}
+                    />
+                    {showIdeologicalReferences && ideologicalReferences.map((reference) => (
+                      <button
+                        key={reference.id}
+                        type="button"
+                        aria-label={`${reference.label}: ${reference.description}`}
+                        title={`${reference.label}\n${reference.description}`}
+                        className="group absolute z-10 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full focus:z-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 hover:z-30"
+                        style={{ left: `${reference.x}%`, top: `${reference.y}%` }}
+                      >
+                        <span aria-hidden="true" className="quadrant-reference-dot h-2 w-2 rounded-full border transition group-hover:scale-125 group-focus:scale-125" />
+                        <span aria-hidden="true" className="quadrant-reference-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 w-36 -translate-x-1/2 rounded-lg border px-2.5 py-2 text-left opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+                          <span className="quadrant-reference-tooltip-title block text-[10px] font-semibold">{reference.label}</span>
+                          <span className="quadrant-reference-tooltip-description mt-0.5 block text-[9px] leading-3">{reference.description}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <span aria-hidden="true" className="quadrant-label flex flex-col items-end rounded-md px-1 py-1 text-right text-[9px] font-semibold leading-3 sm:text-[10px]">Direita →<span className="text-[8px] font-normal opacity-75 sm:text-[9px]">Mais mercado</span></span>
+                </div>
+                <p className="mt-1 text-center text-sm font-semibold text-white/85">↓ Autoritário<span className="mt-0.5 block text-[10px] font-normal text-white/55">Mais controle e regras</span></p>
               </div>
-              <p className="mt-2 text-center text-xs font-semibold text-white/75">↓ Autoritário</p>
-              <p className="mt-3 text-center text-[11px] leading-4 text-white/45">Seu posicionamento aproximado no quadrante político.</p>
+              {showIdeologicalReferences && (
+                <div className="mt-auto pt-2">
+                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[9px] text-white/55" aria-label="Legenda do quadrante">
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border-[2px] border-slate-950 bg-teal-300 shadow-[0_0_8px_rgba(94,234,212,.7)]" />Você</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="quadrant-reference-dot h-2 w-2 rounded-full border" />Referência ideológica</span>
+                  </div>
+                  <p className="mx-auto mt-1.5 max-w-md text-center text-[9px] leading-3 text-white/40">Referências ideológicas são aproximações visuais usadas apenas para facilitar a interpretação do mapa. Não representam partidos, políticos ou organizações.</p>
+                </div>
+              )}
             </section>
 
-            <section className="theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 md:col-span-2 xl:col-span-1 sm:p-5" aria-labelledby="axes-title">
-              <div className="mb-3">
+            <section className="theme-panel flex flex-col rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3 md:col-span-2 xl:col-span-1 sm:p-4" aria-labelledby="axes-title">
+              <div className="mb-2">
                 <h2 id="axes-title" className="text-base font-semibold">Seus seis eixos</h2>
-                <p className="mt-0.5 text-[11px] leading-4 text-white/45">50% indica o centro; os extremos mostram a inclinação.</p>
+                <p className="mt-0.5 text-[10px] leading-3 text-white/45">50% indica o centro; os extremos mostram a inclinação.</p>
               </div>
-              <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-1">
+              <div className="grid gap-2 xl:grid-cols-1">
                 {axisInfo.map((axis) => {
                   const percent = axisPercentages[axis.key];
                   const AxisIcon = axisIcons[axis.key];
                   return (
                     <div key={axis.key}>
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-white/85"><AxisIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-violet-300" strokeWidth={1.8} />{axis.label}</span>
+                      <div className="mb-0.5 flex items-center justify-between gap-2">
+                        <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-3 text-white/85"><AxisIcon aria-hidden="true" className="h-3 w-3 shrink-0 text-violet-300" strokeWidth={1.8} />{axis.label}</span>
                         <span className="text-[11px] font-semibold tabular-nums text-teal-200">{percent}%</span>
                       </div>
                       <div className="theme-progress-track relative h-1 overflow-hidden rounded-full bg-white/[0.08]" role="progressbar" aria-label={`${axis.label}: ${percent}% em direção a ${axis.high}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><div className="h-full rounded-full bg-gradient-to-r from-violet-400 to-teal-300" style={{ width: `${percent}%` }} /></div>
@@ -682,23 +1007,37 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                   );
                 })}
               </div>
+              <div className="mt-auto pt-8">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3">
+                  <h3 className="text-[11px] font-semibold text-white/75">Como ler os percentuais</h3>
+                  <div className="mt-2 flex items-center justify-between text-[9px] font-medium tabular-nums text-white/50">
+                    <span>0%</span>
+                    <span>50% · centro</span>
+                    <span>100%</span>
+                  </div>
+                  <div aria-hidden="true" className="relative mt-1.5 h-1.5 rounded-full bg-gradient-to-r from-violet-400 via-slate-400 to-teal-300">
+                    <span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-900 bg-white shadow-sm" />
+                  </div>
+                  <p className="mt-2 text-[10px] leading-4 text-white/55">50% indica equilíbrio entre os lados. Quanto mais perto de 0% ou 100%, maior a inclinação para o lado correspondente indicado abaixo de cada barra.</p>
+                </div>
+              </div>
             </section>
           </section>
         )}
 
         {stage === "result" && (
-          <section className="theme-share-card mb-4 w-full self-center rounded-2xl border border-violet-300/25 bg-gradient-to-r from-violet-500/[0.13] via-white/[0.035] to-teal-400/[0.10] p-5 shadow-[0_18px_65px_rgba(91,75,210,.12)] sm:mb-6 sm:p-7" aria-labelledby="share-result-title">
-            <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
-              <div className="max-w-xl">
+          <section className="theme-share-card mb-4 w-full self-center rounded-2xl border border-violet-300/25 bg-gradient-to-r from-violet-500/[0.13] via-white/[0.035] to-teal-400/[0.10] p-4 shadow-[0_18px_65px_rgba(91,75,210,.12)] sm:mb-6 sm:p-5" aria-labelledby="share-result-title">
+            <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+              <div className="max-w-xl lg:max-w-[28rem]">
                 <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-violet-300">Leve seu resultado para a conversa</p>
                 <h2 id="share-result-title" className="mt-1 text-xl font-semibold sm:text-2xl">Compartilhe seu resultado</h2>
                 <p className="mt-1.5 text-sm leading-6 text-white/60">Compare seu resultado com amigos e descubra como cada pessoa se posiciona nos seis eixos.</p>
               </div>
-              <div className="grid w-full gap-2 sm:grid-cols-2 lg:max-w-[35rem]">
-                <button onClick={copyResultImage} className="rounded-xl border border-white/15 bg-white/[0.07] px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.1] focus:outline-none focus:ring-2 focus:ring-violet-300">Copiar imagem</button>
-                <button onClick={downloadResultImage} disabled={isGeneratingImage} className="rounded-xl border border-white/15 bg-white/[0.07] px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-teal-300/45 hover:bg-teal-300/[0.1] focus:outline-none focus:ring-2 focus:ring-teal-300 disabled:cursor-wait disabled:opacity-50">{isGeneratingImage ? "Gerando PNG…" : "Baixar PNG"}</button>
-                <button onClick={shareResult} className="rounded-xl bg-violet-400 px-4 py-3 text-sm font-semibold text-[#11101d] shadow-[0_8px_24px_rgba(139,124,246,.22)] transition hover:bg-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200">Compartilhar</button>
-                <button onClick={copyResultLink} className="rounded-xl border border-white/15 bg-white/[0.07] px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.1] focus:outline-none focus:ring-2 focus:ring-violet-300">Copiar link</button>
+              <div className="grid w-full gap-2 sm:grid-cols-2 lg:max-w-none lg:grid-cols-4">
+                <button onClick={shareResult} className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-400 px-3 py-2.5 text-sm font-semibold text-[#11101d] shadow-[0_8px_24px_rgba(139,124,246,.28)] transition hover:bg-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-200"><Share2 aria-hidden="true" className="h-4 w-4 shrink-0" />Compartilhar</button>
+                <button onClick={copyResultImage} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.07] px-3 py-2.5 text-xs font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.1] focus:outline-none focus:ring-2 focus:ring-violet-300"><Image aria-hidden="true" className="h-4 w-4 shrink-0" />Copiar imagem</button>
+                <button onClick={downloadResultImage} disabled={isGeneratingImage} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.07] px-3 py-2.5 text-xs font-semibold text-white/85 transition hover:border-teal-300/45 hover:bg-teal-300/[0.1] focus:outline-none focus:ring-2 focus:ring-teal-300 disabled:cursor-wait disabled:opacity-50"><Download aria-hidden="true" className="h-4 w-4 shrink-0" />{isGeneratingImage ? "Gerando PNG…" : "Baixar PNG"}</button>
+                <button onClick={copyResultLink} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.07] px-3 py-2.5 text-xs font-semibold text-white/85 transition hover:border-violet-300/45 hover:bg-violet-300/[0.1] focus:outline-none focus:ring-2 focus:ring-violet-300"><Link2 aria-hidden="true" className="h-4 w-4 shrink-0" />Copiar link</button>
               </div>
             </div>
             {shareMessage && <p role="status" className="mt-4 inline-flex items-center gap-2 text-xs text-teal-200">{(shareMessage === "Imagem copiada para a área de transferência." || shareMessage.includes("copiado")) && <CircleCheck aria-hidden="true" className="h-4 w-4 shrink-0" />}{shareMessage}</p>}
@@ -706,67 +1045,34 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
         )}
 
         {stage === "result" && (
-          <section className="mb-4 w-full self-center" aria-labelledby="closest-profiles-title">
-            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <h2 id="closest-profiles-title" className="text-lg font-semibold">Perfis mais próximos</h2>
-                <p className="mt-0.5 text-xs text-white/45">Ideias parecidas com as suas — não uma avaliação política.</p>
+          <div className="mb-6 grid w-full items-start gap-3 self-center lg:grid-cols-[1fr_1.1fr]">
+            <details className="methodology-details theme-panel rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-300 [&::-webkit-details-marker]:hidden">
+                <span>Como calculamos seu resultado?</span>
+                <ChevronDown aria-hidden="true" className="methodology-chevron h-4 w-4 shrink-0 text-violet-300 transition-transform" />
+              </summary>
+              <div className="mt-3 border-t border-white/[0.08] pt-3">
+                <p className="text-sm leading-6 text-white/60">Suas respostas são analisadas em seis dimensões:</p>
+                <ul className="mt-2 grid gap-2 text-sm text-white/75 sm:grid-cols-2">
+                  {axisInfo.map((axis) => <li key={axis.key} className="flex items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-violet-300" />{axis.label}</li>)}
+                </ul>
+                <p className="mt-3 text-sm leading-6 text-white/60">Cada resposta ajuda a mostrar sua posição em um ou mais eixos. Depois, comparamos suas respostas com diferentes perfis e mostramos os que mais se aproximam.</p>
+                <p className="mt-2 text-xs leading-5 text-white/45">Este resultado é uma aproximação, não um diagnóstico político, e não representa toda a complexidade das suas opiniões.</p>
               </div>
-            </div>
-            <ol className="grid gap-3 sm:grid-cols-3">
-              {closestProfiles.map(({ archetype: profile, compatibility }, index) => {
-                const NearbyIcon = archetypeIcons[profile.name] ?? Dna;
-                return (
-                  <li key={profile.name} className="theme-panel flex min-h-24 items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-                    <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-300/[0.1] text-sm font-bold tabular-nums text-violet-300">{index + 1}</span>
-                    <NearbyIcon aria-hidden="true" className="h-5 w-5 shrink-0 text-violet-300" strokeWidth={1.8} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold leading-5">{profile.name}</span>
-                      <span className="mt-1 block text-xs text-white/45">Compatibilidade</span>
-                    </span>
-                    <span className="shrink-0 text-lg font-bold tabular-nums text-teal-200">{compatibility}%</span>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-        )}
+            </details>
 
-        {stage === "result" && (
-          <details className="methodology-details theme-panel mb-4 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:mb-6 sm:p-5">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-300 [&::-webkit-details-marker]:hidden">
-              <span>Como calculamos seu resultado?</span>
-              <ChevronDown aria-hidden="true" className="methodology-chevron h-4 w-4 shrink-0 text-violet-300 transition-transform" />
-            </summary>
-            <div className="mt-4 border-t border-white/[0.08] pt-4">
-              <p className="text-sm leading-6 text-white/60">Suas respostas são analisadas em seis dimensões:</p>
-              <ul className="mt-3 grid gap-2 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
-                {axisInfo.map((axis) => <li key={axis.key} className="flex items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-violet-300" />{axis.label}</li>)}
-              </ul>
-              <p className="mt-4 text-sm leading-6 text-white/60">Cada resposta ajuda a mostrar sua posição em um ou mais eixos. Depois, comparamos suas respostas com diferentes perfis e mostramos os que mais se aproximam.</p>
-              <p className="mt-3 text-xs leading-5 text-white/45">Este resultado é uma aproximação, não um diagnóstico político, e não representa toda a complexidade das suas opiniões.</p>
-            </div>
-          </details>
-        )}
-
-        {stage === "result" && (
-          <section className="theme-panel mb-6 w-full self-center rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:p-6" aria-labelledby="support-title">
-            <div className="grid items-center gap-5 lg:grid-cols-[auto_1fr]">
-              <div className="mx-auto shrink-0 rounded-2xl bg-white p-3 shadow-sm" aria-label="QR Code Pix">
-                <QRCodeSVG value={pixPayload} size={144} level="M" marginSize={2} bgColor="#ffffff" fgColor="#111827" title="QR Code Pix para apoiar o DNA Político" />
+            <section className="theme-panel flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 sm:flex-row sm:items-center sm:p-5" aria-labelledby="support-title">
+              <div className="mx-auto shrink-0 rounded-xl bg-white p-2 shadow-sm sm:mx-0" aria-label="QR Code Pix">
+                <QRCodeSVG value={pixPayload} size={112} level="M" marginSize={2} bgColor="#ffffff" fgColor="#111827" title="QR Code Pix para apoiar o DNA Político" />
               </div>
               <div className="min-w-0">
-                <h2 id="support-title" className="flex items-center gap-2 text-lg font-semibold"><Coffee aria-hidden="true" className="h-5 w-5 text-violet-300" />Gostou do projeto?</h2>
-                <p className="mt-1 text-sm text-white/65">Pague um café para o desenvolvedor. Sua contribuição é opcional e ajuda a manter o teste gratuito.</p>
-                <p className="mt-4 text-xs font-semibold text-white/55">PIX copia e cola</p>
-                <div className="theme-pix-code mt-1 flex items-start gap-2 rounded-xl border border-white/[0.08] bg-white/[0.035] p-3">
-                  <code className="min-w-0 flex-1 break-all text-[10px] leading-4 text-white/60">{pixPayload}</code>
-                  <button type="button" onClick={copyPix} className="shrink-0 rounded-lg border border-violet-300/25 bg-violet-300/[0.08] px-3 py-2 text-xs font-semibold text-violet-200 transition hover:bg-violet-300/[0.14] focus:outline-none focus:ring-2 focus:ring-violet-300"><Copy aria-hidden="true" className="mr-1 inline h-3.5 w-3.5" />Copiar Pix</button>
-                </div>
+                <h2 id="support-title" className="flex items-center gap-2 text-base font-semibold"><Coffee aria-hidden="true" className="h-4 w-4 text-violet-300" />Gostou do projeto?</h2>
+                <p className="mt-1 text-sm leading-5 text-white/60">Se o teste foi útil para você, considere pagar um café para ajudar a manter o projeto gratuito.</p>
+                <button type="button" onClick={copyPix} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-violet-300/35 hover:bg-violet-300/[0.07] focus:outline-none focus:ring-2 focus:ring-violet-300"><Copy aria-hidden="true" className="h-3.5 w-3.5" />Copiar PIX</button>
                 {pixMessage && <p role="status" aria-live="polite" className="mt-2 text-xs text-teal-200">{pixMessage}</p>}
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
         )}
 
         <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.07] pt-5 text-[11px] text-white/35"><span>DNA Político</span><span>Suas respostas são processadas neste navegador.</span></footer>
