@@ -167,7 +167,7 @@ function createShareImage(
   archetypeName: string,
   description: string,
   position: string,
-  phrase: string,
+  shareQuote: string,
   compatibility: number,
   axes: ShareAxis[],
   ideologicalIntensity: IdeologicalIntensity,
@@ -322,9 +322,20 @@ function createShareImage(
   drawWrappedText(ideologicalIntensity.description, profileX + 9, intensityTop + 47, profileWidth - 18, 9, "7px Arial, sans-serif", "rgba(255,255,255,.62)", 2);
 
   const descriptionBottom = drawWrappedText(description, profileX, intensityTop + 73, profileWidth, 14, "12px Arial, sans-serif", "rgba(255,255,255,.76)", 2);
-  const phraseBottom = drawWrappedText(`“${phrase}”`, profileX, descriptionBottom + 14, profileWidth, 14, "italic 11px Arial, sans-serif", "#bdf5ec", 2);
+  const quoteCardY = descriptionBottom + 8;
+  context.fillStyle = "rgba(94,234,212,.09)";
+  context.strokeStyle = "rgba(94,234,212,.24)";
+  context.beginPath();
+  context.roundRect(profileX, quoteCardY, profileWidth, 36, 8);
+  context.fill();
+  context.stroke();
+  context.textAlign = "left";
+  context.fillStyle = "#86e6d5";
+  context.font = "700 23px Georgia, serif";
+  context.fillText("“", profileX + 7, quoteCardY + 21);
+  drawWrappedText(shareQuote, profileX + 23, quoteCardY + 14, profileWidth - 31, 11, "italic 10px Arial, sans-serif", "#d8fff7", 2);
 
-  const compatibilityTop = phraseBottom + 14;
+  const compatibilityTop = quoteCardY + 39;
   const circle = { x: profileX + 39, y: compatibilityTop + 37, radius: 34 };
   context.save();
   context.lineWidth = 5;
@@ -726,7 +737,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     setIsGeneratingImage(true);
     clearShareMessage();
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -748,7 +759,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       showShareMessage("Imagem copiada para a área de transferência.");
     } catch {
@@ -769,7 +780,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
     }
 
     try {
-      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.phrase, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
+      const blob = createShareImage(archetype.name, archetype.description, politicalPosition, archetype.shareQuote, primaryCompatibility, shareAxes, ideologicalIntensity, shareClosestProfiles, quadrantCoordinates);
       const file = new File([blob], "meu-dna-politico.png", { type: "image/png" });
       const url = sharedUrl;
       if (shareNavigator.canShare?.({ files: [file] })) {
@@ -912,7 +923,7 @@ export default function DnaPoliticalApp({ sharedRoute = false }: { sharedRoute?:
                 <p className="text-[9px] leading-3 text-white/55">{ideologicalIntensity.description}</p>
               </div>
               <p className="mt-2 text-xs leading-4 text-white/65">{archetype.description}</p>
-              <blockquote className="theme-quote mt-2 rounded-xl border border-white/[0.08] bg-black/15 px-3 py-2 text-[11px] leading-4 text-teal-100/90">“{archetype.phrase}”</blockquote>
+              <blockquote className="theme-quote mt-2 flex gap-2 rounded-xl border border-teal-200/20 bg-teal-200/[0.06] px-3 py-2 text-sm font-medium italic leading-5 text-teal-100/90 shadow-[0_0_18px_rgba(94,234,212,.06)]"><span aria-hidden="true" className="-mt-1 shrink-0 text-2xl font-semibold not-italic text-violet-300">“</span><span>{archetype.shareQuote}</span></blockquote>
               <div className="mt-3 flex items-center gap-3 text-teal-200" role="img" aria-label={`Compatibilidade: ${primaryCompatibility}%. Suas respostas se alinham em ${primaryCompatibility}% com este perfil.`}>
                 <div className="relative grid h-24 w-24 shrink-0 place-items-center">
                   <svg aria-hidden="true" viewBox="0 0 120 120" className="absolute inset-0 h-full w-full -rotate-90">
